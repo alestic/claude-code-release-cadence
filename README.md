@@ -55,6 +55,12 @@ make purge          # remove public/, data/, venv, caches
 make help           # show all targets
 ```
 
+## Analytics
+
+The deployed dashboard supports Google Analytics 4. To enable it, add a
+`GA_MEASUREMENT_ID` repository secret (Settings > Secrets > Actions) with
+your `G-XXXXXXXXXX` measurement ID. Local builds omit the tracking snippet.
+
 ## How it works
 
 1. Fetch -- downloads npm package metadata and CHANGELOG.md via HTTP

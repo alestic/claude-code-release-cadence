@@ -11,6 +11,7 @@ Usage::
 
 import argparse
 import logging
+import os
 import sys
 from importlib.metadata import version as pkg_version
 from pathlib import Path
@@ -79,8 +80,10 @@ def do_build() -> None:
 
     colors: dict[str, str] = assign_colors(data["majors_order"])
 
+    ga_id: str = os.environ.get("GA_MEASUREMENT_ID", "")
+
     log.info("Rendering dashboard...")
-    render(TEMPLATE, OUTPUT_HTML, data, colors)
+    render(TEMPLATE, OUTPUT_HTML, data, colors, ga_measurement_id=ga_id)
 
     log.info("Exporting data...")
     export_json(data, OUTPUT_DATA_JSON)

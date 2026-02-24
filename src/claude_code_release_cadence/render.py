@@ -10,6 +10,20 @@ from .compute import ComputedData
 
 log: logging.Logger = logging.getLogger(__name__)
 
+_GA_SNIPPET_TEMPLATE: str = (
+    '<script async src="https://www.googletagmanager.com/gtag/js?id={mid}"></script>'
+    "<script>window.dataLayer=window.dataLayer||[];"
+    "function gtag(){{dataLayer.push(arguments)}}"
+    'gtag("js",new Date());gtag("config","{mid}")</script>\n'
+)
+
+
+def _ga_snippet(measurement_id: str) -> str:
+    """Return the gtag.js snippet for a GA4 measurement ID, or empty string."""
+    if not measurement_id:
+        return ""
+    return _GA_SNIPPET_TEMPLATE.format(mid=measurement_id)
+
 
 def _json_for_html(obj: object) -> str:
     """Serialize to JSON safe for embedding inside HTML <script> tags.
@@ -51,6 +65,8 @@ def render(
     output_path: Path,
     data: ComputedData,
     colors: dict[str, str],
+    *,
+    ga_measurement_id: str = "",
 ) -> None:
     """Render HTML dashboard from template and computed data.
 
@@ -67,6 +83,7 @@ def render(
     }
     replacements.update(
         {
+            "GA_SNIPPET": _ga_snippet(ga_measurement_id),
             "DATA_COLORS": _json_for_html(colors),
             "TOTAL_COUNT": str(data["total_count"]),
             "FIRST_DATE": data["first_date"],

@@ -81,3 +81,5 @@ Generated outputs (gitignored): `public/index.html` (Chart.js dashboard), `data/
 `npm-sizes.json` is optional — the build runs without it (sizes will be blank).
 
 CI runs tests on every push/PR (`test.yml`) and deploys `public/` to GitHub Pages nightly at ~midnight US/Pacific (08:00 UTC), on push to main, and via `workflow_dispatch`.
+
+`GA_MEASUREMENT_ID` env var (optional) — injects GA4 gtag.js snippet into the dashboard. Set as a GitHub Actions secret for deploys; omitted locally.
