@@ -64,6 +64,7 @@
   .heatmap-row-label { font-size: 0.75em; color: var(--text-muted); display: flex; align-items: center; padding-right: 4px; }
   .heatmap-cell { aspect-ratio: 1; border-radius: 3px; cursor: default; position: relative; min-height: 16px; }
   .heatmap-cell-tooltip { position: fixed; display: none; z-index: 100; background: var(--tooltip-bg); border: 1px solid var(--tooltip-border); border-radius: 6px; padding: 8px 10px; color: var(--text); font: 12px -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: pre-line; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+  .heatmap-now { position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: #f43f5e; box-shadow: 0 0 0 2px var(--bg-card); pointer-events: none; }
   .heatmap-legend { display: flex; align-items: center; gap: 4px; margin-top: 8px; justify-content: flex-end; font-size: 0.75em; color: var(--text-muted); }
   .heatmap-legend-cell { width: 16px; height: 16px; border-radius: 2px; }
   /* Footer styles */
@@ -144,7 +145,7 @@
 
 <div class="chart-container">
   <h2 id="activity-heatmap">Release Activity Heatmap</h2>
-  <p class="chart-desc">Changelog entries by day of week and hour (US/Pacific). Stronger color = more entries. Based on release timestamps with changelog data.</p>
+  <p class="chart-desc">Changelog entries by day of week and hour (US/Pacific). Stronger color = more entries. Red dot marks the current day and hour. Based on release timestamps with changelog data.</p>
   <div id="heatmap"></div>
 </div>
 
@@ -699,6 +700,21 @@ majorsOrder.forEach(series => {
     }
   }
   container.appendChild(grid);
+
+  // "Now" dot — highlight current US/Pacific day+hour
+  try {
+    var pacNow = new Date(new Date().toLocaleString('en-US', {timeZone: 'America/Los_Angeles'}));
+    var jsDow = pacNow.getDay();          // 0=Sun
+    var nowDow = (jsDow + 6) % 7;         // convert to 0=Mon
+    var nowHour = pacNow.getHours();
+    var nowCell = grid.querySelector('[data-dow="' + nowDow + '"][data-hour="' + nowHour + '"]');
+    if (nowCell) {
+      var dot = document.createElement('div');
+      dot.className = 'heatmap-now';
+      dot.title = 'Now (US/Pacific)';
+      nowCell.appendChild(dot);
+    }
+  } catch(e) {}
 
   // Legend
   const legend = document.createElement('div');
