@@ -10,6 +10,7 @@ Usage::
 # [Created with AI: Claude Code with Opus 4.6]
 
 import argparse
+import importlib.resources
 import logging
 import os
 import sys
@@ -27,18 +28,22 @@ PROGRAM_NAME: str = "claude-code-release-cadence"
 LOG_FORMAT: str = f"%(asctime)s [{PROGRAM_NAME}] [%(levelname)s] %(message)s"
 LOG_FORMAT_DATE: str = "%Y-%m-%d %H:%M:%S"
 
-# Project paths (relative to repo root; src/claude_code_release_cadence/ → repo)
-BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent
-DATA_DIR: Path = BASE_DIR / "data" / "raw"
-COOKED_DIR: Path = BASE_DIR / "data" / "cooked"
-PUBLIC_DIR: Path = BASE_DIR / "public"
-TEMPLATE_DIR: Path = BASE_DIR / "templates"
+# Template is bundled inside the package
+TEMPLATE: Path = Path(
+    str(importlib.resources.files(__package__).joinpath("templates/dashboard.template.html"))
+)
+
+# Data and output paths are relative to CWD so the tool works both
+# from a repo checkout and when installed via uvx.
+CWD: Path = Path.cwd()
+DATA_DIR: Path = CWD / "data" / "raw"
+COOKED_DIR: Path = CWD / "data" / "cooked"
+PUBLIC_DIR: Path = CWD / "public"
 
 # Input files
 NPM_TIMES: Path = DATA_DIR / "npm-times.json"
 NPM_SIZES: Path = DATA_DIR / "npm-sizes.json"
 CHANGELOG: Path = DATA_DIR / "CHANGELOG.md"
-TEMPLATE: Path = TEMPLATE_DIR / "dashboard.template.html"
 
 # Output files
 OUTPUT_HTML: Path = PUBLIC_DIR / "index.html"

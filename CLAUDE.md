@@ -57,7 +57,7 @@ Source lives in `src/claude_code_release_cadence/`. Five-stage pipeline orchestr
 1. **Fetch** (`fetch.py`) — downloads npm registry metadata and CHANGELOG.md via urllib; 30s timeout, 50MB response limit
 2. **Parse** (`parse.py`) — loads JSON timestamps, package sizes, and markdown changelog sections into dicts
 3. **Compute** (`compute.py`) — the core engine; classifies versions into major series, detects fix-only releases via `FIX_PATTERN` regex, computes gaps/distributions/heatmaps; returns a `ComputedData` TypedDict (defined at top of file with all sub-TypedDicts)
-4. **Render** (`render.py`) — injects computed data into `templates/dashboard.template.html` via `{{PLACEHOLDER}}` substitution with HTML-safe JSON escaping
+4. **Render** (`render.py`) — injects computed data into the bundled `templates/dashboard.template.html` via `{{PLACEHOLDER}}` substitution with HTML-safe JSON escaping
 5. **Export** (`export.py`) — writes `data.json`, `releases.csv`, `notes.json` to `data/cooked/`
 
 Supporting modules:

@@ -14,7 +14,15 @@ Generates an interactive dashboard showing release frequency, day-of-week and ho
 
 - Python 3.12+
 
-## Quickstart
+## Quick run (no clone needed)
+
+```
+uvx --from git+https://github.com/alestic/claude-code-release-cadence claude-code-release-cadence --fetch
+```
+
+This fetches data, builds the dashboard, and writes output to the current directory.
+
+## Quickstart (local development)
 
 ```
 make install-dev    # create venv and install
