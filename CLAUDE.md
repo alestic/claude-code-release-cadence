@@ -24,8 +24,9 @@ make help           # show all targets
 ```
 
 CLI flags (via `uv run python -m claude_code_release_cadence`):
-- `--fetch` — fetch fresh data, then build
+- *(default)* — fetch fresh data, then build
 - `--fetch-only` — fetch data without building
+- `--build-only` — build from existing data without fetching
 - `-v` / `--verbose` — enable debug logging
 
 ### Testing

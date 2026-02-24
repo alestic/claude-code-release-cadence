@@ -17,7 +17,7 @@ Generates an interactive dashboard showing release frequency, day-of-week and ho
 ## Quick run (no clone needed)
 
 ```
-uvx --from git+https://github.com/alestic/claude-code-release-cadence claude-code-release-cadence --fetch
+uvx --from git+https://github.com/alestic/claude-code-release-cadence claude-code-release-cadence
 ```
 
 This fetches data, builds the dashboard, and writes output to the current directory.

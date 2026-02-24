@@ -3,8 +3,8 @@
 
 Usage::
 
-    claude-code-release-cadence                 # build from existing data
-    claude-code-release-cadence --fetch         # fetch fresh data, then build
+    claude-code-release-cadence                 # fetch fresh data and build
+    claude-code-release-cadence --build-only    # build from existing data
     claude-code-release-cadence --fetch-only    # fetch data without building
 """
 # [Created with AI: Claude Code with Opus 4.6]
@@ -70,7 +70,7 @@ def do_build() -> None:
     if missing:
         for p in missing:
             log.error("Missing required file: %s", p)
-        log.error("Run with --fetch first.")
+        log.error("Run without --build-only to fetch data first.")
         sys.exit(1)
 
     log.info("Loading data...")
@@ -112,14 +112,14 @@ def main() -> None:
         version=f"%(prog)s {pkg_version('claude-code-release-cadence')}",
     )
     parser.add_argument(
-        "--fetch",
-        action="store_true",
-        help="fetch fresh data before building",
-    )
-    parser.add_argument(
         "--fetch-only",
         action="store_true",
         help="fetch data without building",
+    )
+    parser.add_argument(
+        "--build-only",
+        action="store_true",
+        help="build from existing data without fetching",
     )
     parser.add_argument(
         "-v",
@@ -136,7 +136,7 @@ def main() -> None:
     )
 
     try:
-        if args.fetch or args.fetch_only:
+        if not args.build_only:
             do_fetch()
         if not args.fetch_only:
             do_build()

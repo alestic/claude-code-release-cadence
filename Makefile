@@ -21,10 +21,11 @@ fetch: $(INSTALL_STAMP) ## Fetch fresh data from npm/GitHub/web
 
 .PHONY: build
 build: $(INSTALL_STAMP) ## Build dashboard and exports from existing data
-	uv run python -m claude_code_release_cadence
+	uv run python -m claude_code_release_cadence --build-only
 
 .PHONY: all
-all: fetch build ## Fetch data, then build dashboard and exports
+all: $(INSTALL_STAMP) ## Fetch data, then build dashboard and exports
+	uv run python -m claude_code_release_cadence
 
 .PHONY: test-unit
 test-unit: $(INSTALL_STAMP) ## Run pytest unit tests
