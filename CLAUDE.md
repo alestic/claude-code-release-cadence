@@ -68,7 +68,7 @@ Supporting modules:
 ## Key Conventions
 
 - **Zero runtime dependencies** — stdlib only (urllib, json, csv, datetime, collections, re, pathlib, zoneinfo)
-- **Date-based versioning** (`YYYY.MM.DD`) in `pyproject.toml` — **always bump to today's date after making changes**, then run `uv sync --dev` to update `uv.lock`
+- **Date-based versioning** (`YYYY.MM.DD.HHMM` US/Pacific) in `pyproject.toml` — **always bump to the current US/Pacific date and time after making changes**, then run `uv sync --dev` to update `uv.lock`
 - **TypedDict for data structures** — all inter-module data contracts defined in `compute.py`
 - **mypy** with `warn_return_any` and `warn_unused_configs` enabled
 - **Version series classification** — pre-1.0 uses minor (`0.2.x`), post-1.0 uses major.minor (`2.1.x`); see `classify_major()`
