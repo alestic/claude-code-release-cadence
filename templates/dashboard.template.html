@@ -59,7 +59,11 @@
   [data-theme="dark"] .icon-moon { display: none; }
   [data-theme="light"] .icon-sun { display: none; }
   /* Heatmap styles */
-  .heatmap-grid { display: grid; grid-template-columns: 48px repeat(24, 1fr); gap: 2px; }
+  .heatmap-grid { display: grid; gap: 2px; }
+  .heatmap-wide { grid-template-columns: 48px repeat(24, 1fr); }
+  .heatmap-narrow { display: none; grid-template-columns: 48px repeat(7, 1fr); }
+  .heatmap-narrow .heatmap-cell { aspect-ratio: auto; }
+  @media (max-width: 640px) { .heatmap-wide { display: none; } .heatmap-narrow { display: grid; gap: 2px; } }
   .heatmap-header { font-size: 0.7em; color: var(--text-muted); text-align: center; padding: 2px 0; }
   .heatmap-row-label { font-size: 0.75em; color: var(--text-muted); display: flex; align-items: center; padding-right: 4px; }
   .heatmap-cell { aspect-ratio: 1; border-radius: 3px; cursor: default; position: relative; min-height: 16px; }
@@ -119,7 +123,7 @@
   <h2 id="cadence-by-major">Release Cadence by Major Version</h2>
   <p class="chart-desc">Comparing pace across major version series.</p>
   <table class="major-table">
-    <thead><tr><th>Series</th><th>Releases</th><th>Span</th><th>Avg Gap</th><th>Releases/<wbr>Week</th><th>Entries/<wbr>Week</th><th>Date Range</th></tr></thead>
+    <thead><tr><th>Series</th><th>Releases</th><th>Span</th><th>Releases/<wbr>Week</th><th>Entries/<wbr>Week</th><th>Date Range</th></tr></thead>
     <tbody id="major-table-body"></tbody>
   </table>
 </div>
@@ -621,7 +625,7 @@ majorsOrder.forEach(series => {
   tdSeries.appendChild(dot);
   tdSeries.appendChild(document.createTextNode(series));
   tr.appendChild(tdSeries);
-  [s.count, s.span_days + ' days', s.avg_gap_days + ' days', perWeek, notesPerWeek, s.first + ' \u2014 ' + s.last].forEach(text => {
+  [s.count, s.span_days + ' days', perWeek, notesPerWeek, s.first + ' \u2014 ' + s.last].forEach(text => {
     const td = document.createElement('td');
     td.textContent = String(text);
     tr.appendChild(td);
@@ -629,91 +633,106 @@ majorsOrder.forEach(series => {
   tbody.appendChild(tr);
 });
 
-// --- Heatmap (DOW x Hour, pure CSS grid) ---
+// --- Heatmap (DOW x Hour, pure CSS grid — wide + narrow layouts) ---
 (function() {
   const container = document.getElementById('heatmap');
   const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const maxVal = Math.max(1, ...heatmapDowHour.flat());
 
-  // Tooltip element
+  // Tooltip element (shared)
   const tip = document.createElement('div');
   tip.className = 'heatmap-cell-tooltip';
   document.body.appendChild(tip);
 
-  // Build grid
-  const grid = document.createElement('div');
-  grid.className = 'heatmap-grid';
-
-  // Header row: empty corner + 24 hour labels
-  const corner = document.createElement('div');
-  corner.className = 'heatmap-header';
-  grid.appendChild(corner);
-  for (let h = 0; h < 24; h++) {
-    const hdr = document.createElement('div');
-    hdr.className = 'heatmap-header';
-    hdr.textContent = h % 6 === 0 ? ((h % 12 || 12) + (h < 12 ? 'a' : 'p')) : '';
-    grid.appendChild(hdr);
+  function makeCell(d, h) {
+    const total = heatmapDowHour[d][h];
+    const fixes = heatmapDowHourFixes[d][h];
+    const features = total - fixes;
+    const intensity = total > 0 ? Math.sqrt(total / maxVal) : 0;
+    const cell = document.createElement('div');
+    cell.className = 'heatmap-cell';
+    const isDark = getTheme() === 'dark';
+    cell.dataset.dow = d;
+    cell.dataset.hour = h;
+    cell.dataset.total = total;
+    cell.dataset.fixes = fixes;
+    cell.dataset.features = features;
+    if (total === 0) {
+      cell.style.background = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)';
+    } else {
+      cell.style.background = isDark
+        ? 'rgba(56, 189, 248, ' + (0.15 + intensity * 0.75) + ')'
+        : 'rgba(14, 116, 144, ' + (0.12 + intensity * 0.7) + ')';
+    }
+    cell.addEventListener('mouseenter', function(e) {
+      var dn = dayNames[+this.dataset.dow];
+      var hr = +this.dataset.hour;
+      var hrLabel = (hr % 12 || 12) + (hr < 12 ? 'am' : 'pm');
+      tip.textContent = dn + ' ' + hrLabel + ': ' + this.dataset.total + ' entries (' + this.dataset.fixes + ' fixes, ' + this.dataset.features + ' features)';
+      tip.style.display = 'block';
+    });
+    cell.addEventListener('mousemove', function(e) {
+      tip.style.left = (e.clientX + 12) + 'px';
+      tip.style.top = (e.clientY + 12) + 'px';
+    });
+    cell.addEventListener('mouseleave', function() { tip.style.display = 'none'; });
+    return cell;
   }
 
-  // Data rows
+  function hourLabel(h) {
+    return h % 6 === 0 ? ((h % 12 || 12) + (h < 12 ? 'a' : 'p')) : '';
+  }
+
+  function makeHeader(text) {
+    const hdr = document.createElement('div');
+    hdr.className = 'heatmap-header';
+    hdr.textContent = text || '';
+    return hdr;
+  }
+
+  // Wide grid: rows = days, columns = hours (original layout)
+  const wide = document.createElement('div');
+  wide.className = 'heatmap-grid heatmap-wide';
+  wide.appendChild(makeHeader());
+  for (let h = 0; h < 24; h++) wide.appendChild(makeHeader(hourLabel(h)));
   for (let d = 0; d < 7; d++) {
     const lbl = document.createElement('div');
     lbl.className = 'heatmap-row-label';
     lbl.textContent = dayNames[d];
-    grid.appendChild(lbl);
-    for (let h = 0; h < 24; h++) {
-      const total = heatmapDowHour[d][h];
-      const fixes = heatmapDowHourFixes[d][h];
-      const features = total - fixes;
-      const intensity = total > 0 ? Math.sqrt(total / maxVal) : 0;
-
-      const cell = document.createElement('div');
-      cell.className = 'heatmap-cell';
-      const isDark = getTheme() === 'dark';
-      cell.dataset.dow = d;
-      cell.dataset.hour = h;
-      cell.dataset.total = total;
-      cell.dataset.fixes = fixes;
-      cell.dataset.features = features;
-      if (total === 0) {
-        cell.style.background = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)';
-      } else {
-        cell.style.background = isDark
-          ? 'rgba(56, 189, 248, ' + (0.15 + intensity * 0.75) + ')'
-          : 'rgba(14, 116, 144, ' + (0.12 + intensity * 0.7) + ')';
-      }
-
-      cell.addEventListener('mouseenter', function(e) {
-        const dn = dayNames[+this.dataset.dow];
-        const hr = +this.dataset.hour;
-        const hrLabel = (hr % 12 || 12) + (hr < 12 ? 'am' : 'pm');
-        tip.textContent = dn + ' ' + hrLabel + ': ' + this.dataset.total + ' entries (' + this.dataset.fixes + ' fixes, ' + this.dataset.features + ' features)';
-        tip.style.display = 'block';
-      });
-      cell.addEventListener('mousemove', function(e) {
-        tip.style.left = (e.clientX + 12) + 'px';
-        tip.style.top = (e.clientY + 12) + 'px';
-      });
-      cell.addEventListener('mouseleave', function() { tip.style.display = 'none'; });
-
-      grid.appendChild(cell);
-    }
+    wide.appendChild(lbl);
+    for (let h = 0; h < 24; h++) wide.appendChild(makeCell(d, h));
   }
-  container.appendChild(grid);
+  container.appendChild(wide);
 
-  // "Now" dot — highlight current US/Pacific day+hour
+  // Narrow grid: rows = hours, columns = days (transposed for mobile)
+  const narrow = document.createElement('div');
+  narrow.className = 'heatmap-grid heatmap-narrow';
+  narrow.appendChild(makeHeader());
+  for (let d = 0; d < 7; d++) narrow.appendChild(makeHeader(dayNames[d]));
+  for (let h = 0; h < 24; h++) {
+    const lbl = document.createElement('div');
+    lbl.className = 'heatmap-row-label';
+    lbl.textContent = hourLabel(h);
+    narrow.appendChild(lbl);
+    for (let d = 0; d < 7; d++) narrow.appendChild(makeCell(d, h));
+  }
+  container.appendChild(narrow);
+
+  // "Now" dot — highlight current US/Pacific day+hour in both grids
   try {
     var pacNow = new Date(new Date().toLocaleString('en-US', {timeZone: 'America/Los_Angeles'}));
     var jsDow = pacNow.getDay();          // 0=Sun
     var nowDow = (jsDow + 6) % 7;         // convert to 0=Mon
     var nowHour = pacNow.getHours();
-    var nowCell = grid.querySelector('[data-dow="' + nowDow + '"][data-hour="' + nowHour + '"]');
-    if (nowCell) {
-      var dot = document.createElement('div');
-      dot.className = 'heatmap-now';
-      dot.title = 'Now (US/Pacific)';
-      nowCell.appendChild(dot);
-    }
+    [wide, narrow].forEach(function(g) {
+      var nowCell = g.querySelector('[data-dow="' + nowDow + '"][data-hour="' + nowHour + '"]');
+      if (nowCell) {
+        var dot = document.createElement('div');
+        dot.className = 'heatmap-now';
+        dot.title = 'Now (US/Pacific)';
+        nowCell.appendChild(dot);
+      }
+    });
   } catch(e) {}
 
   // Legend
