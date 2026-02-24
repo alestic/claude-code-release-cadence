@@ -37,7 +37,7 @@ make build          # generate dashboard and exports (requires fetched data)
 | `public/index.html`                       | Interactive dashboard (open in any browser)          |
 | `data/cooked/data.json`                   | All computed statistics as JSON                      |
 | `data/cooked/notes.json`                  | Release notes with bullet counts and full text       |
-| `data/cooked/releases.csv`                | Flat release list (version, date, timestamp, series) |
+| `data/cooked/releases.csv`                | Flat release list (version, date, timestamp, major, unpacked_size, file_count) |
 
 All outputs are generated from two public data sources:
 

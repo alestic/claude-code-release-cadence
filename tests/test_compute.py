@@ -143,7 +143,6 @@ def test_compute_all_has_required_keys() -> None:
         "hour_stacked_fixonly",
         "major_stats",
         "majors_order",
-        "peak_week",
         "total_count",
         "first_date",
         "last_date",

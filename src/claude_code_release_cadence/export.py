@@ -1,4 +1,4 @@
-"""Export computed data to JSON, CSV, and TSV."""
+"""Export computed data to JSON and CSV."""
 # [Created with AI: Claude Code with Opus 4.6]
 
 import csv

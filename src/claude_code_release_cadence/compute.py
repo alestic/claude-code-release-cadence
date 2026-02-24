@@ -56,7 +56,6 @@ class MajorStats(TypedDict):
 
     count: int
     span_days: float
-    avg_gap_days: float
     first: str
     last: str
 
@@ -77,7 +76,6 @@ class ComputedData(TypedDict):
     hour_stacked_fixonly: dict[str, list[int]]
     major_stats: dict[str, MajorStats]
     majors_order: list[str]
-    peak_week: int
     total_count: int
     first_date: str
     last_date: str
@@ -94,7 +92,7 @@ class ComputedData(TypedDict):
 log: logging.Logger = logging.getLogger(__name__)
 
 FIX_PATTERN: re.Pattern[str] = re.compile(
-    r"\bbugfix(?:es)?\b|\bfix(?:e[ds])?\b|\bresolv(?:ed?|ing)\b|\baddress(?:ed|es|ing)\b|\brevert(?:ed|s|ing)?\b",
+    r"\bbugfix(?:es)?\b|\bfix(?:e[ds])?\b|\bresolv(?:e[ds]?|ing)\b|\baddress(?:ed|es|ing)\b|\brevert(?:ed|s|ing)?\b",
     re.IGNORECASE,
 )
 
@@ -293,12 +291,11 @@ def _compute_weekly(
     dict[str, list[int]],
     dict[str, list[int]],
     dict[str, list[int]],
-    int,
 ]:
     """Compute weekly release counts and notes counts.
 
     Returns (week_labels, stacked, stacked_fixonly,
-             notes_stacked, notes_stacked_fixes, peak_week).
+             notes_stacked, notes_stacked_fixes).
     """
     week_counts: defaultdict[str, defaultdict[str, int]] = defaultdict(
         lambda: defaultdict(int)
@@ -338,15 +335,12 @@ def _compute_weekly(
             }
         return {m: [src[w].get(m, 0) for w in weeks] for m in majors_order}
 
-    peak: int = max((sum(week_counts[w].values()) for w in weeks), default=0)
-
     return (
         weeks,
         to_lists(week_counts, week_fixonly),
         to_lists(week_fixonly),
         to_lists(week_notes_nf),
         to_lists(week_notes_fx),
-        peak,
     )
 
 
@@ -364,13 +358,11 @@ def _compute_major_stats(
         mrs = by_major[major]
         if len(mrs) > 1:
             span = (mrs[-1]["dt_pac"] - mrs[0]["dt_pac"]).total_seconds() / 86400
-            avg = span / (len(mrs) - 1)
         else:
-            span = avg = 0
+            span = 0
         stats[major] = {
             "count": len(mrs),
             "span_days": round(span, 1),
-            "avg_gap_days": round(avg, 2),
             "first": mrs[0]["date"],
             "last": mrs[-1]["date"],
         }
@@ -465,7 +457,6 @@ def compute_all(
         week_stacked_fixonly,
         week_notes_stacked,
         week_notes_stacked_fixes,
-        peak_week,
     ) = _compute_weekly(_releases, majors_order, fix_only, notes_by_version)
 
     # DOW and hour stacking via shared helper
@@ -514,7 +505,6 @@ def compute_all(
         "hour_stacked_fixonly": hour_stacked_fixonly,
         "major_stats": _compute_major_stats(_releases, majors_order),
         "majors_order": majors_order,
-        "peak_week": peak_week,
         "total_count": len(releases),
         "first_date": releases[0]["date"] if releases else "",
         "last_date": releases[-1]["date"] if releases else "",
