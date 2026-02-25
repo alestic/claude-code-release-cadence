@@ -65,7 +65,15 @@ Prettier formats Markdown, CSS, and JS files (`.prettierrc` at project root; `si
 
 ### Pre-commit Hooks
 
-`pre-commit` auto-fixes formatting (prettier for Markdown/CSS/JS, ruff for Python) and auto-bumps the version, then runs mypy and pytest. If any files were modified by hooks, re-stage and commit again. Install once with `make install-hooks`. To bypass temporarily: `git commit --no-verify`.
+`pre-commit` auto-fixes formatting (prettier for Markdown/CSS/JS, ruff for Python), auto-bumps the version, then runs mypy and pytest. Install once with `make install-hooks`. To bypass temporarily: `git commit --no-verify`.
+
+**Before committing**, always run:
+
+```
+make bump-version && git add pyproject.toml uv.lock
+```
+
+then stage your changes and commit. If you skip this, the pre-commit hook will bump the version and fail, requiring you to re-stage `pyproject.toml` and `uv.lock` and commit again.
 
 ## Architecture
 
@@ -98,7 +106,7 @@ Template partials in `templates/`:
 ## Key Conventions
 
 - **Zero runtime dependencies** — stdlib only (urllib, json, csv, datetime, collections, re, pathlib, zoneinfo)
-- **Date-based versioning** (`YYYY.MM.DD.HHMM` America/Los_Angeles) in `pyproject.toml` — run `make bump-version` before committing (also auto-bumped by pre-commit hook if forgotten)
+- **Date-based versioning** (`YYYY.MM.DD.HHMM` America/Los_Angeles) in `pyproject.toml` — **always run `make bump-version && git add pyproject.toml uv.lock` before `git commit`** to avoid the pre-commit hook failing and requiring a re-stage/re-commit cycle
 - **TypedDict for data structures** — all inter-module data contracts defined in `compute.py`
 - **mypy** with `warn_return_any` and `warn_unused_configs` enabled
 - **Version series classification** — pre-1.0 uses minor (`0.2.x`), post-1.0 uses major.minor (`2.1.x`); see `classify_major()`
