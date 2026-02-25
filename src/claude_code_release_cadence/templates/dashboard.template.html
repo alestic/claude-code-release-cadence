@@ -13,11 +13,13 @@
     --bg-body: #0d1117; --bg-card: #161b22; --border: #30363d;
     --text: #c9d1d9; --text-muted: #8b949e; --text-heading: #f0f6fc;
     --tooltip-bg: #1c2128; --tooltip-border: #444c56;
+    --link: #58a6ff;
   }
   [data-theme="light"] {
     --bg-body: #ffffff; --bg-card: #f6f8fa; --border: #d0d7de;
     --text: #1f2328; --text-muted: #656d76; --text-heading: #1f2328;
     --tooltip-bg: #ffffff; --tooltip-border: #d0d7de;
+    --link: #0969da;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg-body); color: var(--text); padding: 24px; transition: background 0.3s, color 0.3s; }
@@ -64,6 +66,7 @@
   .heatmap-narrow { display: none; grid-template-columns: 48px repeat(7, 1fr); }
   .heatmap-narrow .heatmap-cell { aspect-ratio: auto; }
   @media (max-width: 640px) { .heatmap-wide { display: none; } .heatmap-narrow { display: grid; gap: 2px; } }
+  .heatmap-row { display: contents; }
   .heatmap-header { font-size: 0.7em; color: var(--text-muted); text-align: center; padding: 2px 0; }
   .heatmap-row-label { font-size: 0.75em; color: var(--text-muted); display: flex; align-items: center; padding-right: 4px; }
   .heatmap-cell { aspect-ratio: 1; border-radius: 3px; cursor: default; position: relative; min-height: 16px; }
@@ -79,7 +82,7 @@
   .footer-grid h3 { font-size: 0.95em; color: var(--text-heading); margin-bottom: 8px; }
   .footer-grid p, .footer-grid li { color: var(--text-muted); font-size: 0.82em; line-height: 1.6; }
   .footer-grid ul { list-style: none; padding: 0; }
-  .footer-grid a { color: #58a6ff; text-decoration: none; }
+  .footer-grid a { color: var(--link); text-decoration: none; }
   .footer-grid a:hover { text-decoration: underline; }
 </style>
 </head>
@@ -98,25 +101,25 @@
 <div class="chart-container">
   <h2 id="days-between">Days Between Consecutive Releases</h2>
   <p class="chart-desc">Gap in days from one release to the next. Lower = more frequent. Points colored by major version series.</p>
-  <div class="chart-wrapper"><canvas id="gapChart"></canvas></div>
+  <div class="chart-wrapper"><canvas id="gapChart" role="img" aria-label="Scatter chart: days between consecutive releases over time, colored by major version series"></canvas></div>
 </div>
 
 <div class="chart-container">
   <h2 id="releases-per-week">Releases Per Week</h2>
   <p class="chart-desc">Count of versions published each calendar week (Mon&ndash;Sun), stacked by major version series. Paler segments = fix-only releases.</p>
-  <div class="chart-wrapper"><canvas id="weekChart"></canvas></div>
+  <div class="chart-wrapper"><canvas id="weekChart" role="img" aria-label="Stacked bar chart: releases published per calendar week, by major version series"></canvas></div>
 </div>
 
 <div class="chart-container">
   <h2 id="entries-per-week">Changelog Entries Per Week</h2>
   <p class="chart-desc">Total changelog bullet points per calendar week (Mon&ndash;Sun), stacked by major version series. Paler segments = fix entries.</p>
-  <div class="chart-wrapper"><canvas id="weekNotesChart"></canvas></div>
+  <div class="chart-wrapper"><canvas id="weekNotesChart" role="img" aria-label="Stacked bar chart: changelog entries per calendar week, by major version series"></canvas></div>
 </div>
 
 <div class="chart-container">
   <h2 id="entries-per-release">Changelog Entries Per Release</h2>
   <p class="chart-desc">Fixes vs. non-fix changes per release ({{NOTES_COUNT}} releases with changelog entries). Colored by major version series; paler segments = fixes.</p>
-  <div class="chart-wrapper"><canvas id="notesChart"></canvas></div>
+  <div class="chart-wrapper"><canvas id="notesChart" role="img" aria-label="Stacked bar chart: changelog entries per release, split into fixes vs non-fix changes"></canvas></div>
 </div>
 
 <div class="chart-container">
@@ -131,19 +134,19 @@
 <div class="chart-container" id="sizeChartContainer" style="display:none">
   <h2 id="package-size">Package Size Over Time</h2>
   <p class="chart-desc">npm unpacked package size (MB, blue) and file count (green) across releases.</p>
-  <div class="chart-wrapper"><canvas id="sizeChart"></canvas></div>
+  <div class="chart-wrapper"><canvas id="sizeChart" role="img" aria-label="Dual-axis line chart: npm package size in MB and file count over time"></canvas></div>
 </div>
 
 <div class="row">
   <div class="chart-container">
     <h2 id="day-of-week">Day of Week</h2>
     <p class="chart-desc">Which days do releases land on? (US/Pacific) Bars show % of each version&rsquo;s total; paler segments = fix-only.</p>
-    <div class="chart-wrapper"><canvas id="dowChart"></canvas></div>
+    <div class="chart-wrapper"><canvas id="dowChart" role="img" aria-label="Stacked bar chart: percentage of releases by day of week per major version"></canvas></div>
   </div>
   <div class="chart-container">
     <h2 id="hour-of-day">Hour of Day</h2>
     <p class="chart-desc">What time are releases published? (US/Pacific) Bars show % of each version&rsquo;s total; paler segments = fix-only.</p>
-    <div class="chart-wrapper"><canvas id="hourChart"></canvas></div>
+    <div class="chart-wrapper"><canvas id="hourChart" role="img" aria-label="Stacked bar chart: percentage of releases by hour of day per major version"></canvas></div>
   </div>
 </div>
 
@@ -452,12 +455,16 @@ const notesSentinel = document.createElement('div');
 notesSentinel.style.cssText = 'position:absolute;bottom:0;left:0;width:1px;height:1px';
 notesWrapper.appendChild(notesSentinel);
 
+// Track focused overlay version for focus restoration after rebuild
+var focusedOverlayVersion = null;
+
 // Show ALL outlier overlays at once
 function showNotesOverlays(chart) {
   const o = chart._outlier;
   const meta = chart.getDatasetMeta(0);
   const { chartArea } = chart;
   const pxPerUnit = (chartArea.bottom - chartArea.top) / o.cap;
+  var restoreVersion = focusedOverlayVersion;
   while (notesOverlayContainer.firstChild) notesOverlayContainer.removeChild(notesOverlayContainer.firstChild);
   o.visibleTotals.forEach((total, idx) => {
     if (total <= o.threshold || !meta.data[idx]) return;
@@ -475,6 +482,9 @@ function showNotesOverlays(chart) {
     col.style.left = (barX - barWidth / 2) + 'px';
     col.style.top = (chartArea.top - overflowPx - 20) + 'px';
     col.style.width = barWidth + 'px';
+    col.setAttribute('tabindex', '0');
+    col.setAttribute('role', 'img');
+    col.setAttribute('aria-label', version + ': ' + parts.nonFixes + ' non-fix changes, ' + parts.fixes + ' fixes, ' + parts.total + ' total');
     col.addEventListener('mouseenter', () => {
       overlayTooltip.textContent = version + '\nnon-fix changes: ' + parts.nonFixes + '\nfixes: ' + parts.fixes + '\nTotal: ' + parts.total;
       overlayTooltip.style.display = 'block';
@@ -484,6 +494,17 @@ function showNotesOverlays(chart) {
       overlayTooltip.style.top = (e.clientY + 12) + 'px';
     });
     col.addEventListener('mouseleave', () => { overlayTooltip.style.display = 'none'; });
+    col.addEventListener('focus', function() {
+      focusedOverlayVersion = version;
+      overlayTooltip.textContent = version + '\nnon-fix changes: ' + parts.nonFixes + '\nfixes: ' + parts.fixes + '\nTotal: ' + parts.total;
+      overlayTooltip.style.display = 'block';
+      var r = this.getBoundingClientRect();
+      var left = r.right + 8;
+      if (left + 220 > window.innerWidth) left = r.left - 228;
+      overlayTooltip.style.left = Math.max(0, left) + 'px';
+      overlayTooltip.style.top = r.top + 'px';
+    });
+    col.addEventListener('blur', function() { focusedOverlayVersion = null; overlayTooltip.style.display = 'none'; });
 
     const label = document.createElement('div');
     label.className = 'overlay-label';
@@ -507,6 +528,10 @@ function showNotesOverlays(chart) {
     notesOverlayContainer.appendChild(col);
   });
   notesOverlayContainer.style.display = 'block';
+  if (restoreVersion) {
+    var el = notesOverlayContainer.querySelector('[aria-label^="' + restoreVersion + ':"]');
+    if (el) el.focus();
+  }
 }
 function hideNotesOverlays() { notesOverlayContainer.style.display = 'none'; }
 
@@ -644,19 +669,41 @@ majorsOrder.forEach(series => {
   tip.className = 'heatmap-cell-tooltip';
   document.body.appendChild(tip);
 
-  function makeCell(d, h) {
+  function cellTipText(cell) {
+    var dn = dayNames[+cell.dataset.dow];
+    var hr = +cell.dataset.hour;
+    var hrLabel = (hr % 12 || 12) + (hr < 12 ? 'am' : 'pm');
+    return dn + ' ' + hrLabel + ': ' + cell.dataset.total + ' entries (' + cell.dataset.fixes + ' fixes, ' + cell.dataset.features + ' features)';
+  }
+
+  function showTipAt(el) {
+    tip.textContent = cellTipText(el);
+    tip.style.display = 'block';
+    var r = el.getBoundingClientRect();
+    var left = r.right + 8;
+    if (left + 220 > window.innerWidth) left = r.left - 228;
+    tip.style.left = Math.max(0, left) + 'px';
+    tip.style.top = r.top + 'px';
+  }
+
+  function makeCell(d, h, isFirst) {
     const total = heatmapDowHour[d][h];
     const fixes = heatmapDowHourFixes[d][h];
     const features = total - fixes;
     const intensity = total > 0 ? Math.sqrt(total / maxVal) : 0;
     const cell = document.createElement('div');
     cell.className = 'heatmap-cell';
+    cell.setAttribute('role', 'gridcell');
+    cell.setAttribute('tabindex', isFirst ? '0' : '-1');
     const isDark = getTheme() === 'dark';
     cell.dataset.dow = d;
     cell.dataset.hour = h;
     cell.dataset.total = total;
     cell.dataset.fixes = fixes;
     cell.dataset.features = features;
+    var dn = dayNames[d];
+    var hrLabel = (h % 12 || 12) + (h < 12 ? 'am' : 'pm');
+    cell.setAttribute('aria-label', dn + ' ' + hrLabel + ': ' + total + ' entries (' + fixes + ' fixes, ' + features + ' features)');
     if (total === 0) {
       cell.style.background = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)';
     } else {
@@ -665,10 +712,7 @@ majorsOrder.forEach(series => {
         : 'rgba(14, 116, 144, ' + (0.12 + intensity * 0.7) + ')';
     }
     cell.addEventListener('mouseenter', function(e) {
-      var dn = dayNames[+this.dataset.dow];
-      var hr = +this.dataset.hour;
-      var hrLabel = (hr % 12 || 12) + (hr < 12 ? 'am' : 'pm');
-      tip.textContent = dn + ' ' + hrLabel + ': ' + this.dataset.total + ' entries (' + this.dataset.fixes + ' fixes, ' + this.dataset.features + ' features)';
+      tip.textContent = cellTipText(this);
       tip.style.display = 'block';
     });
     cell.addEventListener('mousemove', function(e) {
@@ -676,6 +720,8 @@ majorsOrder.forEach(series => {
       tip.style.top = (e.clientY + 12) + 'px';
     });
     cell.addEventListener('mouseleave', function() { tip.style.display = 'none'; });
+    cell.addEventListener('focus', function() { showTipAt(this); });
+    cell.addEventListener('blur', function() { tip.style.display = 'none'; });
     return cell;
   }
 
@@ -683,39 +729,86 @@ majorsOrder.forEach(series => {
     return h % 6 === 0 ? ((h % 12 || 12) + (h < 12 ? 'a' : 'p')) : '';
   }
 
-  function makeHeader(text) {
+  function makeHeader(text, role) {
     const hdr = document.createElement('div');
     hdr.className = 'heatmap-header';
     hdr.textContent = text || '';
+    if (role) hdr.setAttribute('role', role);
     return hdr;
+  }
+
+  function makeRow() {
+    const row = document.createElement('div');
+    row.className = 'heatmap-row';
+    row.setAttribute('role', 'row');
+    return row;
+  }
+
+  // Arrow-key navigation for roving tabindex within a grid
+  function addGridKeyNav(grid, rowCount, colCount) {
+    grid.addEventListener('keydown', function(e) {
+      var focused = document.activeElement;
+      if (!focused || !focused.dataset.dow) return;
+      var d = +focused.dataset.dow, h = +focused.dataset.hour;
+      // Wide: rows=days(d), cols=hours(h); Narrow: rows=hours(h), cols=days(d)
+      var isWide = grid.classList.contains('heatmap-wide');
+      var row = isWide ? d : h, col = isWide ? h : d;
+      if (e.key === 'ArrowRight') col = (col + 1) % colCount;
+      else if (e.key === 'ArrowLeft') col = (col + colCount - 1) % colCount;
+      else if (e.key === 'ArrowDown') row = (row + 1) % rowCount;
+      else if (e.key === 'ArrowUp') row = (row + rowCount - 1) % rowCount;
+      else if (e.key === 'Home') { row = 0; col = 0; }
+      else if (e.key === 'End') { row = rowCount - 1; col = colCount - 1; }
+      else return;
+      e.preventDefault();
+      var nd = isWide ? row : col, nh = isWide ? col : row;
+      var next = grid.querySelector('[data-dow="' + nd + '"][data-hour="' + nh + '"]');
+      if (next) { focused.setAttribute('tabindex', '-1'); next.setAttribute('tabindex', '0'); next.focus(); }
+    });
   }
 
   // Wide grid: rows = days, columns = hours (original layout)
   const wide = document.createElement('div');
   wide.className = 'heatmap-grid heatmap-wide';
-  wide.appendChild(makeHeader());
-  for (let h = 0; h < 24; h++) wide.appendChild(makeHeader(hourLabel(h)));
+  wide.setAttribute('role', 'grid');
+  wide.setAttribute('aria-label', 'Release activity heatmap: days of week by hours');
+  var hdrRow = makeRow();
+  hdrRow.appendChild(makeHeader('', 'columnheader'));
+  for (let h = 0; h < 24; h++) hdrRow.appendChild(makeHeader(hourLabel(h), 'columnheader'));
+  wide.appendChild(hdrRow);
   for (let d = 0; d < 7; d++) {
+    var row = makeRow();
     const lbl = document.createElement('div');
     lbl.className = 'heatmap-row-label';
+    lbl.setAttribute('role', 'rowheader');
     lbl.textContent = dayNames[d];
-    wide.appendChild(lbl);
-    for (let h = 0; h < 24; h++) wide.appendChild(makeCell(d, h));
+    row.appendChild(lbl);
+    for (let h = 0; h < 24; h++) row.appendChild(makeCell(d, h, d === 0 && h === 0));
+    wide.appendChild(row);
   }
+  addGridKeyNav(wide, 7, 24);
   container.appendChild(wide);
 
   // Narrow grid: rows = hours, columns = days (transposed for mobile)
   const narrow = document.createElement('div');
   narrow.className = 'heatmap-grid heatmap-narrow';
-  narrow.appendChild(makeHeader());
-  for (let d = 0; d < 7; d++) narrow.appendChild(makeHeader(dayNames[d]));
+  narrow.setAttribute('role', 'grid');
+  narrow.setAttribute('aria-label', 'Release activity heatmap: hours by days of week');
+  hdrRow = makeRow();
+  hdrRow.appendChild(makeHeader('', 'columnheader'));
+  for (let d = 0; d < 7; d++) hdrRow.appendChild(makeHeader(dayNames[d], 'columnheader'));
+  narrow.appendChild(hdrRow);
   for (let h = 0; h < 24; h++) {
+    var row = makeRow();
     const lbl = document.createElement('div');
     lbl.className = 'heatmap-row-label';
+    lbl.setAttribute('role', 'rowheader');
     lbl.textContent = hourLabel(h);
-    narrow.appendChild(lbl);
-    for (let d = 0; d < 7; d++) narrow.appendChild(makeCell(d, h));
+    row.appendChild(lbl);
+    for (let d = 0; d < 7; d++) row.appendChild(makeCell(d, h, d === 0 && h === 0));
+    narrow.appendChild(row);
   }
+  addGridKeyNav(narrow, 24, 7);
   container.appendChild(narrow);
 
   // "Now" dot — highlight current US/Pacific day+hour in both grids
