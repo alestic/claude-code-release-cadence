@@ -20,7 +20,7 @@ Generates an interactive dashboard showing release frequency, day-of-week and ho
 uvx --from git+https://github.com/alestic/claude-code-release-cadence claude-code-release-cadence
 ```
 
-This fetches data, builds the dashboard, and writes output to the current directory.
+This fetches data, exports JSON/CSV, and builds the dashboard, writing output to subdirectories in the current directory.
 
 ## Quickstart (local development)
 
@@ -75,8 +75,8 @@ your `G-XXXXXXXXXX` measurement ID. Local builds omit the tracking snippet.
 1. Fetch -- downloads npm package metadata and CHANGELOG.md via HTTP
 2. Parse -- extracts version timestamps and release note sections
 3. Compute -- classifies versions into series, detects fix-only releases, computes gaps/distributions/statistics
-4. Render -- injects computed data into a Chart.js HTML template
-5. Export -- writes JSON and CSV files
+4. Export -- writes JSON and CSV files
+5. Render -- injects computed data into a Chart.js HTML template
 
 ## Attribution
 

@@ -91,15 +91,15 @@ def do_build() -> None:
 
     ga_id: str = os.environ.get("GA_MEASUREMENT_ID", "")
 
-    log.info("Rendering dashboard...")
-    render(TEMPLATE, OUTPUT_HTML, data, colors, ga_measurement_id=ga_id)
-
     log.info("Exporting data...")
     export_json(data, OUTPUT_DATA_JSON)
     export_releases_csv(
         data["releases"], OUTPUT_RELEASES_CSV, size_data=data["size_data"]
     )
     export_notes_json(data["notes_data"], changelog, OUTPUT_NOTES_JSON)
+
+    log.info("Rendering dashboard...")
+    render(TEMPLATE, OUTPUT_HTML, data, colors, ga_measurement_id=ga_id)
 
     log.info("Build complete.")
 

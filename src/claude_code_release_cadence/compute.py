@@ -152,7 +152,7 @@ def _merge_changelog_versions(
         else:
             continue
 
-        log.info("Interpolated timestamp for changelog-only version %s", version)
+        log.debug("Interpolated timestamp for changelog-only version %s", version)
 
     return merged
 
