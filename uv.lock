@@ -4,7 +4,7 @@ requires-python = ">=3.12"
 
 [[package]]
 name = "claude-code-release-cadence"
-version = "2026.2.24.1604"
+version = "2026.2.24.1609"
 source = { editable = "." }
 
 [package.dev-dependencies]
