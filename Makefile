@@ -38,6 +38,9 @@ test-typing: $(INSTALL_STAMP) ## Run mypy type checking
 .PHONY: test
 test: test-typing test-unit ## Run all tests (typing + unit)
 
+.PHONY: check
+check: lint test ## Run all linters and tests
+
 .PHONY: lint
 lint: lint-py lint-md lint-css lint-js ## Run all linters and format checkers
 
