@@ -30,7 +30,11 @@ LOG_FORMAT_DATE: str = "%Y-%m-%d %H:%M:%S"
 
 # Template is bundled inside the package
 TEMPLATE: Path = Path(
-    str(importlib.resources.files(__package__).joinpath("templates/dashboard.template.html"))
+    str(
+        importlib.resources.files(__package__).joinpath(
+            "templates/dashboard.template.html"
+        )
+    )
 )
 
 # Data and output paths are relative to CWD so the tool works both

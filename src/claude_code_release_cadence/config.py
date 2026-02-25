@@ -4,7 +4,7 @@
 DEFAULT_PALETTE: list[str] = [
     "#f97316",  # orange
     "#3b82f6",  # blue
-    "#a855f7",  # purple
+    "#b975f9",  # purple (lightened for dark-theme AA contrast)
     "#22c55e",  # green
     "#eab308",  # yellow
     "#ec4899",  # pink

@@ -7,12 +7,12 @@
 <title>Claude Code Release Cadence</title>
 {{GA_SNIPPET}}<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" integrity="sha384-vsrfeLOOY6KuIYKDlmVH5UiBmgIdB1oEf7p01YgWHuqmOHfZr374+odEv96n9tNC" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js" integrity="sha384-cVMg8E3QFwTvGCDuK+ET4PD341jF3W8nO1auiXfuZNQkzbUUiBGLsIQUE+b1mxws" crossorigin="anonymous"></script>
-<script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark')</script>
+<script>(function(){var s=localStorage.getItem('theme');if(!s)s=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark';document.documentElement.setAttribute('data-theme',s)})()</script>
 <style>
   :root, [data-theme="dark"] {
     --bg-body: #0d1117; --bg-card: #161b22; --border: #30363d;
     --text: #c9d1d9; --text-muted: #8b949e; --text-heading: #f0f6fc;
-    --tooltip-bg: #1c2128; --tooltip-border: #444c56;
+    --tooltip-bg: #1c2128; --tooltip-border: #545d68;
     --link: #58a6ff;
   }
   [data-theme="light"] {
@@ -71,7 +71,8 @@
   .heatmap-row-label { font-size: 0.75em; color: var(--text-muted); display: flex; align-items: center; padding-right: 4px; }
   .heatmap-cell { aspect-ratio: 1; border-radius: 3px; cursor: default; position: relative; min-height: 16px; }
   .heatmap-cell-tooltip { position: fixed; display: none; z-index: 100; background: var(--tooltip-bg); border: 1px solid var(--tooltip-border); border-radius: 6px; padding: 8px 10px; color: var(--text); font: 12px -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: pre-line; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
-  .heatmap-now { position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: #f43f5e; box-shadow: 0 0 0 2px var(--bg-card); pointer-events: none; }
+  .heatmap-now { position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: #f43f5e; box-shadow: 0 0 0 2px var(--bg-card); pointer-events: none; animation: now-pulse 2s ease-in-out infinite; }
+  @keyframes now-pulse { 0%,100% { box-shadow: 0 0 0 2px var(--bg-card); } 50% { box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 5px rgba(244,63,94,0.4); } }
   .heatmap-legend { display: flex; align-items: center; gap: 4px; margin-top: 8px; justify-content: flex-end; font-size: 0.75em; color: var(--text-muted); }
   .heatmap-legend-cell { width: 16px; height: 16px; border-radius: 2px; }
   /* Footer styles */
@@ -84,18 +85,27 @@
   .footer-grid ul { list-style: none; padding: 0; }
   .footer-grid a { color: var(--link); text-decoration: none; }
   .footer-grid a:hover { text-decoration: underline; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .skip-link { position: absolute; left: -9999px; top: auto; width: 1px; height: 1px; overflow: hidden; background: var(--bg-card); color: var(--text-heading); padding: 8px 16px; border: 2px solid var(--border); border-radius: 4px; z-index: 999; font-size: 0.9em; text-decoration: none; }
+  .skip-link:focus { position: fixed; left: 50%; top: 16px; transform: translateX(-50%); width: auto; height: auto; overflow: visible; }
+  :focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; } }
 </style>
 </head>
 <body>
 
+<a href="#about" class="skip-link">Skip to About</a>
 <button id="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
-  <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-  <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  <svg class="icon-sun" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+  <svg class="icon-moon" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
 </button>
 
+<header>
 <h1>Claude Code Release Cadence</h1>
 <p class="subtitle">{{TOTAL_COUNT}} versions published to npm &middot; {{FIRST_DATE}} &ndash; {{LAST_DATE}} &middot; All times US/Pacific</p>
+</header>
 
+<main>
 <div class="stats-grid" id="stats-grid"></div>
 
 <div class="chart-container">
@@ -126,7 +136,8 @@
   <h2 id="cadence-by-major">Release Cadence by Major Version</h2>
   <p class="chart-desc">Comparing pace across major version series.</p>
   <table class="major-table">
-    <thead><tr><th>Series</th><th>Releases</th><th>Span</th><th>Releases/<wbr>Week</th><th>Entries/<wbr>Week</th><th>Date Range</th></tr></thead>
+    <caption class="sr-only">Release cadence statistics by major version series</caption>
+    <thead><tr><th scope="col">Series</th><th scope="col">Releases</th><th scope="col">Span</th><th scope="col" aria-label="Releases per Week">Releases/<wbr>Week</th><th scope="col" aria-label="Entries per Week">Entries/<wbr>Week</th><th scope="col">Date Range</th></tr></thead>
     <tbody id="major-table-body"></tbody>
   </table>
 </div>
@@ -156,15 +167,17 @@
   <div id="heatmap"></div>
 </div>
 
-<div class="footer-section">
+</main>
+
+<footer class="footer-section">
   <h2 id="about">About This Dashboard</h2>
   <div class="footer-grid">
     <div>
       <h3>Data Sources &amp; Coverage</h3>
       <ul>
-        <li><a href="https://www.npmjs.com/package/@anthropic-ai/claude-code" target="_blank" rel="noopener">npm: @anthropic-ai/claude-code</a></li>
-        <li><a href="https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md" target="_blank" rel="noopener">GitHub: CHANGELOG.md</a></li>
-        <li><a href="https://github.com/anthropics/claude-code" target="_blank" rel="noopener">GitHub: anthropics/claude-code</a></li>
+        <li><a href="https://www.npmjs.com/package/@anthropic-ai/claude-code" target="_blank" rel="noopener">npm: @anthropic-ai/claude-code <span class="sr-only">(opens in new tab)</span></a></li>
+        <li><a href="https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md" target="_blank" rel="noopener">GitHub: CHANGELOG.md <span class="sr-only">(opens in new tab)</span></a></li>
+        <li><a href="https://github.com/anthropics/claude-code" target="_blank" rel="noopener">GitHub: anthropics/claude-code <span class="sr-only">(opens in new tab)</span></a></li>
         <li id="footer-coverage"></li>
       </ul>
     </div>
@@ -183,14 +196,14 @@
     <div>
       <h3>Project</h3>
       <p style="margin-top: 12px" id="footer-generated"></p>
-      <p style="margin-top: 4px; font-size: 0.78em; color:var(--text-muted);">Built with <a href="https://github.com/alestic/claude-code-release-cadence/" target="_blank" rel="noopener">claude-code-release-cadence</a> v{{VERSION}}</p>
+      <p style="margin-top: 4px; font-size: 0.78em; color:var(--text-muted);">Built with <a href="https://github.com/alestic/claude-code-release-cadence/" target="_blank" rel="noopener">claude-code-release-cadence <span class="sr-only">(opens in new tab)</span></a> v{{VERSION}}</p>
       <p style="margin-top: 4px; font-size: 0.78em; color:var(--text-muted);">Not affiliated with, endorsed by, or sponsored by Anthropic.</p>
       <p style="margin-top: 4px; font-size: 0.78em; color:var(--text-muted);">The accuracy of the generated data and graphs have not been verified. This is presented for entertainment value only.</p>
       <p style="margin-top: 4px; font-size: 0.78em; color:var(--text-muted);">Created with AI: Claude Code with Opus 4.6</p>
-      <p style="margin-top: 4px; font-size: 0.78em; color:var(--text-muted);">Directed by: <a href="https://esh.dev/" target="_blank" rel="noopener">Eric Hammond</a></p>
+      <p style="margin-top: 4px; font-size: 0.78em; color:var(--text-muted);">Directed by: <a href="https://esh.dev/" target="_blank" rel="noopener">Eric Hammond <span class="sr-only">(opens in new tab)</span></a></p>
     </div>
   </div>
-</div>
+</footer>
 
 <script>
 // --- Injected data (generated by claude-code-release-cadence) ---
@@ -214,8 +227,18 @@ const sizeData    = {{DATA_SIZE_DATA}};
 
 // --- Dynamic colors (injected from config.py palette) ---
 const COLORS = {{DATA_COLORS}};
+const COLORS_DARK = Object.assign({}, COLORS);
+// Light-theme palette: darker variants that pass AA-normal (4.5:1) on #f6f8fa
+const DARK_TO_LIGHT = { '#f97316':'#c05621', '#3b82f6':'#2563eb', '#b975f9':'#7c3aed', '#22c55e':'#15803d', '#eab308':'#a16207', '#ec4899':'#be185d', '#14b8a6':'#0f766e', '#f43f5e':'#be123c' };
+const COLORS_LIGHT = {};
+Object.entries(COLORS_DARK).forEach(([k, v]) => { COLORS_LIGHT[k] = DARK_TO_LIGHT[v] || v; });
 const COLORS_PALE = {};
-Object.entries(COLORS).forEach(([k, v]) => { COLORS_PALE[k] = v + '44'; });
+function applyPalette() {
+  var src = getTheme() === 'light' ? COLORS_LIGHT : COLORS_DARK;
+  Object.keys(src).forEach(k => { COLORS[k] = src[k]; });
+  Object.entries(COLORS).forEach(([k, v]) => { COLORS_PALE[k] = v + '44'; });
+}
+applyPalette();
 
 // --- Shared chart helpers ---
 
@@ -279,6 +302,7 @@ function applyChartTheme() {
   Chart.defaults.borderColor = t.border;
 }
 applyChartTheme();
+if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { Chart.defaults.animation = false; }
 Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 
 // --- Trend computation (28-day window) ---
@@ -319,7 +343,7 @@ function trendIndicator(recent, overall, invert) {
   const better = invert ? pct < 0 : pct > 0;
   const arrow = pct > 0 ? '\u25B2' : '\u25BC';
   const label = Math.abs(pct).toFixed(0) + '% ' + (pct > 0 ? 'above' : 'below') + ' overall avg';
-  return { text: arrow + ' ' + label, cls: better ? 'trend-positive' : 'trend-negative' };
+  return { arrow: arrow, text: label, cls: better ? 'trend-positive' : 'trend-negative' };
 }
 
 const gapTrend = trendIndicator(recentAvgGap, overallAvgGap, true);
@@ -335,12 +359,16 @@ const paceTrend = trendIndicator(recentEntriesPerWeek, overallEntriesPerWeek, fa
 ].forEach(s => {
   const card = document.createElement('div');
   card.className = 'stat-card';
+  card.setAttribute('role', 'group');
+  card.setAttribute('aria-label', s.label + ': ' + s.value);
   const lbl = document.createElement('div'); lbl.className = 'label'; lbl.textContent = s.label;
   const val = document.createElement('div'); val.className = 'value'; val.textContent = s.value;
   const det = document.createElement('div'); det.className = 'detail'; det.textContent = s.detail;
   card.appendChild(lbl); card.appendChild(val); card.appendChild(det);
   if (s.trend && s.trend.text) {
-    const tr = document.createElement('div'); tr.className = 'trend ' + s.trend.cls; tr.textContent = s.trend.text;
+    const tr = document.createElement('div'); tr.className = 'trend ' + s.trend.cls;
+    if (s.trend.arrow) { const ar = document.createElement('span'); ar.setAttribute('aria-hidden', 'true'); ar.textContent = s.trend.arrow + ' '; tr.appendChild(ar); }
+    tr.appendChild(document.createTextNode(s.trend.text));
     card.appendChild(tr);
   }
   statsGrid.appendChild(card);
@@ -449,6 +477,8 @@ notesOverlayContainer.className = 'overlay-container';
 notesWrapper.appendChild(notesOverlayContainer);
 const overlayTooltip = document.createElement('div');
 overlayTooltip.className = 'overlay-tooltip';
+overlayTooltip.setAttribute('role', 'status');
+overlayTooltip.setAttribute('aria-live', 'polite');
 document.body.appendChild(overlayTooltip);
 // Sentinel at bottom of chart for scroll detection
 const notesSentinel = document.createElement('div');
@@ -647,6 +677,7 @@ majorsOrder.forEach(series => {
   const dot = document.createElement('span');
   dot.className = 'color-dot';
   dot.style.background = COLORS[series];
+  dot.setAttribute('aria-hidden', 'true');
   tdSeries.appendChild(dot);
   tdSeries.appendChild(document.createTextNode(series));
   tr.appendChild(tdSeries);
@@ -667,6 +698,8 @@ majorsOrder.forEach(series => {
   // Tooltip element (shared)
   const tip = document.createElement('div');
   tip.className = 'heatmap-cell-tooltip';
+  tip.setAttribute('role', 'status');
+  tip.setAttribute('aria-live', 'polite');
   document.body.appendChild(tip);
 
   function cellTipText(cell) {
@@ -873,6 +906,8 @@ function updateHeatmapTheme() {
 }
 
 // --- Package size chart (dual-axis) ---
+var sizeBlue = getTheme() === 'light' ? DARK_TO_LIGHT['#3b82f6'] : '#3b82f6';
+var sizeGreen = getTheme() === 'light' ? DARK_TO_LIGHT['#22c55e'] : '#22c55e';
 if (sizeData.length > 0) {
   document.getElementById('sizeChartContainer').style.display = '';
   new Chart(document.getElementById('sizeChart'), {
@@ -883,8 +918,8 @@ if (sizeData.length > 0) {
         {
           label: 'Unpacked Size (MB)',
           data: sizeData.map(function(d) { return +(d.unpacked_size / 1048576).toFixed(2); }),
-          borderColor: '#3b82f6',
-          backgroundColor: '#3b82f644',
+          borderColor: sizeBlue,
+          backgroundColor: sizeBlue + '44',
           yAxisID: 'ySize',
           tension: 0.3,
           pointRadius: 2,
@@ -893,8 +928,8 @@ if (sizeData.length > 0) {
         {
           label: 'File Count',
           data: sizeData.map(function(d) { return d.file_count; }),
-          borderColor: '#22c55e',
-          backgroundColor: '#22c55e44',
+          borderColor: sizeGreen,
+          backgroundColor: sizeGreen + '44',
           yAxisID: 'yFiles',
           tension: 0.3,
           pointRadius: 2,
@@ -935,16 +970,31 @@ if (sizeData.length > 0) {
 })();
 
 // --- Theme toggle ---
-document.getElementById('theme-toggle').addEventListener('click', function() {
+var themeBtn = document.getElementById('theme-toggle');
+themeBtn.setAttribute('aria-label', 'Switch to ' + (getTheme() === 'dark' ? 'light' : 'dark') + ' theme');
+themeBtn.addEventListener('click', function() {
   var next = getTheme() === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem('theme', next);
+  themeBtn.setAttribute('aria-label', 'Switch to ' + (next === 'dark' ? 'light' : 'dark') + ' theme');
   applyChartTheme();
+  applyPalette();
   updateHeatmapTheme();
   var t = THEME_CHART[next];
-  ['gapChart', 'weekChart', 'weekNotesChart', 'dowChart', 'hourChart', 'notesChart', 'sizeChart'].forEach(function(id) {
+  ['gapChart', 'weekChart', 'weekNotesChart', 'dowChart', 'hourChart', 'notesChart'].forEach(function(id) {
     var c = Chart.getChart(id);
     if (!c) return;
+    c.data.datasets.forEach(function(ds) {
+      var major = ds.label;
+      var isFix = !COLORS[major];
+      if (isFix) { Object.keys(COLORS).forEach(function(k) { if (ds.label.startsWith(k)) major = k; }); }
+      if (COLORS[major]) {
+        var clr = COLORS[major];
+        if (id === 'gapChart') { ds.backgroundColor = clr + 'cc'; ds.borderColor = clr; }
+        else if (isFix) { ds.backgroundColor = COLORS_PALE[major]; ds.borderColor = clr + '88'; }
+        else { ds.backgroundColor = clr + 'cc'; ds.borderColor = clr; }
+      }
+    });
     Object.values(c.options.scales).forEach(function(s) {
       if (s.ticks) s.ticks.color = t.text;
       if (s.title) s.title.color = t.text;
@@ -956,6 +1006,24 @@ document.getElementById('theme-toggle').addEventListener('click', function() {
     }
     c.update('none');
   });
+  // sizeChart: theme-aware blue/green
+  var sc = Chart.getChart('sizeChart');
+  if (sc) {
+    var sBlue = DARK_TO_LIGHT['#3b82f6'], sGreen = DARK_TO_LIGHT['#22c55e'];
+    var blue = next === 'light' ? sBlue : '#3b82f6', green = next === 'light' ? sGreen : '#22c55e';
+    sc.data.datasets[0].borderColor = blue; sc.data.datasets[0].backgroundColor = blue + '44';
+    sc.data.datasets[1].borderColor = green; sc.data.datasets[1].backgroundColor = green + '44';
+    Object.values(sc.options.scales).forEach(function(s) {
+      if (s.ticks) s.ticks.color = t.text; if (s.title) s.title.color = t.text;
+      if (s.grid) s.grid.color = t.border; if (s.border) s.border.color = t.border;
+    });
+    if (sc.options.plugins.legend && sc.options.plugins.legend.labels) sc.options.plugins.legend.labels.color = t.text;
+    sc.update('none');
+  }
+  // Update table color dots
+  document.querySelectorAll('.color-dot').forEach(function(dot, i) {
+    if (i < majorsOrder.length) dot.style.background = COLORS[majorsOrder[i]];
+  });
 });
 
 // --- Anchor links on section headings ---
@@ -963,7 +1031,7 @@ document.querySelectorAll('.chart-container h2[id], .footer-section h2[id]').for
   const a = document.createElement('a');
   a.className = 'anchor-link';
   a.href = '#' + h2.id;
-  a.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"/></svg>';
+  a.innerHTML = '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"/></svg>';
   a.title = 'Copy link to section';
   a.addEventListener('click', e => {
     e.preventDefault();
@@ -971,6 +1039,7 @@ document.querySelectorAll('.chart-container h2[id], .footer-section h2[id]').for
     navigator.clipboard.writeText(url).then(() => {
       const tip = document.createElement('div');
       tip.className = 'anchor-copied';
+      tip.setAttribute('role', 'status');
       tip.textContent = 'Copied!';
       const r = a.getBoundingClientRect();
       tip.style.left = r.right + 6 + 'px';
