@@ -2,6 +2,9 @@
 
 # claude-code-release-cadence
 
+[![Tests](https://github.com/alestic/claude-code-release-cadence/actions/workflows/test.yml/badge.svg)](https://github.com/alestic/claude-code-release-cadence/actions/workflows/test.yml)
+[![Deploy](https://github.com/alestic/claude-code-release-cadence/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/alestic/claude-code-release-cadence/actions/workflows/deploy-pages.yml)
+
 Analyze and visualize the release cadence of [Claude Code](https://github.com/anthropics/claude-code) (`@anthropic-ai/claude-code` on npm).
 
 Generates an interactive dashboard showing release frequency, day-of-week and hour-of-day patterns, version series breakdowns, fix-vs-feature classification, and per-series statistics.
