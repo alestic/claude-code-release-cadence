@@ -86,8 +86,14 @@ Template partials in `templates/`:
 
 - `dashboard.template.html` — HTML skeleton with `{{INLINE:...}}` markers and `{{PLACEHOLDER}}` values
 - `dashboard.css` — all CSS (plain, no placeholders; formatted by prettier)
-- `dashboard.js` — all JS (uses `'__DATA_KEY__'` placeholders that are valid JS strings; formatted by prettier)
 - `theme-init.js` — theme initialization IIFE (no placeholders)
+- `colors.js` — injected data declarations, `getTheme()`, color palette, hatch patterns
+- `chart-helpers.js` — shared Chart.js utilities, defaults, series-label plugin
+- `stats.js` — trend computation (28-day window) and stats cards
+- `charts.js` — scatter plot and four stacked bar charts
+- `notes-overlay.js` — changelog entries per release chart with outlier capping and overlay system
+- `heatmap.js` — DOW×Hour heatmap grid with keyboard nav and theme update
+- `init.js` — major version table, package size chart, footer, theme toggle, anchor links
 
 ## Key Conventions
 
