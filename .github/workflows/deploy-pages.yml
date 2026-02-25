@@ -1,5 +1,5 @@
 # [Created with AI: Claude Code with Opus 4.6]
-name: Deploy to GitHub Pages
+name: Deploy
 
 on:
   push:
