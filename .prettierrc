@@ -1,3 +1,11 @@
 {
-  "proseWrap": "preserve"
+  "proseWrap": "preserve",
+  "overrides": [
+    {
+      "files": "src/**/*.js",
+      "options": {
+        "singleQuote": true
+      }
+    }
+  ]
 }

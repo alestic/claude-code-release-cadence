@@ -54,14 +54,18 @@ make lint-py        # ruff check + format check only
 make format-py      # ruff auto-fix + format only
 make lint-md        # prettier --check on *.md files
 make format-md      # prettier --write on *.md files
+make lint-css       # prettier --check on CSS files
+make format-css     # prettier --write on CSS files
+make lint-js        # prettier --check on JS files
+make format-js      # prettier --write on JS files
 ```
 
 Ruff rules: E, F, W, I (errors, pyflakes, warnings, import sorting). Target: Python 3.12.
-Prettier formats Markdown files (`.prettierrc` at project root, `proseWrap: preserve`).
+Prettier formats Markdown, CSS, and JS files (`.prettierrc` at project root; `singleQuote: true` for JS).
 
 ### Pre-commit Hooks
 
-`pre-commit` auto-fixes formatting (prettier, ruff) and auto-bumps the version, then runs mypy and pytest. If any files were modified by hooks, re-stage and commit again. Install once with `make install-hooks`. To bypass temporarily: `git commit --no-verify`.
+`pre-commit` auto-fixes formatting (prettier for Markdown/CSS/JS, ruff for Python) and auto-bumps the version, then runs mypy and pytest. If any files were modified by hooks, re-stage and commit again. Install once with `make install-hooks`. To bypass temporarily: `git commit --no-verify`.
 
 ## Architecture
 
@@ -70,13 +74,20 @@ Source lives in `src/claude_code_release_cadence/`. Five-stage pipeline orchestr
 1. **Fetch** (`fetch.py`) — downloads npm registry metadata and CHANGELOG.md via urllib; 30s timeout, 50MB response limit
 2. **Parse** (`parse.py`) — loads JSON timestamps, package sizes, and markdown changelog sections into dicts
 3. **Compute** (`compute.py`) — the core engine; classifies versions into major series, detects fix-only releases via `FIX_PATTERN` regex, computes gaps/distributions/heatmaps; returns a `ComputedData` TypedDict (defined at top of file with all sub-TypedDicts)
-4. **Render** (`render.py`) — injects computed data into the bundled `templates/dashboard.template.html` via `{{PLACEHOLDER}}` substitution with HTML-safe JSON escaping
+4. **Render** (`render.py`) — assembles the dashboard from template partials and injects computed data. First resolves `{{INLINE:filename}}` markers to inline CSS/JS files, then replaces data placeholders with HTML-safe JSON
 5. **Export** (`export.py`) — writes `data.json`, `releases.csv`, `notes.json` to `data/cooked/`
 
 Supporting modules:
 
 - `config.py` — color palette assignment for major version series
 - `tz.py` — UTC to US Pacific timezone conversion
+
+Template partials in `templates/`:
+
+- `dashboard.template.html` — HTML skeleton with `{{INLINE:...}}` markers and `{{PLACEHOLDER}}` values
+- `dashboard.css` — all CSS (plain, no placeholders; formatted by prettier)
+- `dashboard.js` — all JS (uses `'__DATA_KEY__'` placeholders that are valid JS strings; formatted by prettier)
+- `theme-init.js` — theme initialization IIFE (no placeholders)
 
 ## Key Conventions
 

@@ -3,6 +3,7 @@
 
 import json
 import logging
+import re
 from importlib.metadata import version as pkg_version
 from pathlib import Path
 
@@ -38,7 +39,16 @@ def _json_for_html(obj: object) -> str:
     )
 
 
-# Keys in ComputedData that map directly to DATA_<KEY> JSON placeholders
+def _inline_partials(html: str, template_dir: Path) -> str:
+    """Replace ``{{INLINE:filename}}`` markers with file contents."""
+
+    def _replace(m: re.Match[str]) -> str:
+        return (template_dir / m.group(1)).read_text()
+
+    return re.sub(r"\{\{INLINE:([^}]+)\}\}", _replace, html)
+
+
+# Keys in ComputedData that map directly to "__DATA_<KEY>__" JSON placeholders
 _JSON_KEYS: list[str] = [
     "releases",
     "gaps",
@@ -70,27 +80,35 @@ def render(
 ) -> None:
     """Render HTML dashboard from template and computed data.
 
-    Replaces ``{{PLACEHOLDER}}`` markers in the template with
-    JSON-serialized or string values.
+    First inlines partial files (CSS, JS) via ``{{INLINE:filename}}``
+    markers, then replaces data placeholders with JSON-serialized or
+    string values.
     """
     with open(template_path) as f:
         html: str = f.read()
 
-    # Build replacements: JSON data keys + string scalars + colors
+    # Phase 1: inline partial files from the templates directory
+    html = _inline_partials(html, template_path.parent)
+
+    # Phase 2: replace data and metadata placeholders
+    # JS data placeholders use '__DATA_KEY__' (quoted in source to keep JS valid)
     replacements: dict[str, str] = {
-        f"DATA_{k.upper()}": _json_for_html(data[k])  # type: ignore[literal-required]
+        f"'__DATA_{k.upper()}__'": _json_for_html(data[k])  # type: ignore[literal-required]
         for k in _JSON_KEYS
     }
+    replacements["'__DATA_COLORS__'"] = _json_for_html(colors)
+    # JS string placeholder (inside an existing JS string literal)
+    replacements["__GENERATED_AT__"] = data["generated_at"]
+
+    # HTML placeholders use {{KEY}} syntax
     replacements.update(
         {
-            "GA_SNIPPET": _ga_snippet(ga_measurement_id),
-            "DATA_COLORS": _json_for_html(colors),
-            "TOTAL_COUNT": str(data["total_count"]),
-            "FIRST_DATE": data["first_date"],
-            "LAST_DATE": data["last_date"],
-            "NOTES_COUNT": str(data["notes_count"]),
-            "GENERATED_AT": data["generated_at"],
-            "VERSION": ".".join(
+            "{{GA_SNIPPET}}": _ga_snippet(ga_measurement_id),
+            "{{TOTAL_COUNT}}": str(data["total_count"]),
+            "{{FIRST_DATE}}": data["first_date"],
+            "{{LAST_DATE}}": data["last_date"],
+            "{{NOTES_COUNT}}": str(data["notes_count"]),
+            "{{VERSION}}": ".".join(
                 f"{int(p):02d}" if i else p
                 for i, p in enumerate(
                     pkg_version("claude-code-release-cadence").split(".")
@@ -100,10 +118,9 @@ def render(
     )
 
     for key, value in replacements.items():
-        placeholder: str = "{{" + key + "}}"
-        if placeholder not in html:
-            log.warning("placeholder %s not found in template", placeholder)
-        html = html.replace(placeholder, value)
+        if key not in html:
+            log.warning("placeholder %s not found in template", key)
+        html = html.replace(key, value)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:

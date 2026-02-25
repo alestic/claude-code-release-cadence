@@ -39,7 +39,7 @@ test-typing: $(INSTALL_STAMP) ## Run mypy type checking
 test: test-typing test-unit ## Run all tests (typing + unit)
 
 .PHONY: lint
-lint: lint-py lint-md ## Run all linters and format checkers
+lint: lint-py lint-md lint-css lint-js ## Run all linters and format checkers
 
 .PHONY: lint-py
 lint-py: $(INSTALL_STAMP)
@@ -50,8 +50,16 @@ lint-py: $(INSTALL_STAMP)
 lint-md: ## Check Markdown formatting with Prettier
 	npx --yes prettier --check '**/*.md'
 
+.PHONY: lint-css
+lint-css: ## Check CSS formatting with Prettier
+	npx --yes prettier --check 'src/**/*.css'
+
+.PHONY: lint-js
+lint-js: ## Check JS formatting with Prettier
+	npx --yes prettier --check 'src/**/*.js'
+
 .PHONY: format
-format: format-py format-md ## Run all formatters
+format: format-py format-md format-css format-js ## Run all formatters
 
 .PHONY: format-py
 format-py: $(INSTALL_STAMP)
@@ -61,6 +69,14 @@ format-py: $(INSTALL_STAMP)
 .PHONY: format-md
 format-md: ## Format Markdown files with Prettier
 	npx --yes prettier --write '**/*.md'
+
+.PHONY: format-css
+format-css: ## Format CSS files with Prettier
+	npx --yes prettier --write 'src/**/*.css'
+
+.PHONY: format-js
+format-js: ## Format JS files with Prettier
+	npx --yes prettier --write 'src/**/*.js'
 
 .PHONY: bump-version
 bump-version: ## Bump version to current America/Los_Angeles timestamp
