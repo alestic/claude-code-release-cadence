@@ -25,7 +25,8 @@ make help           # show all targets
 ```
 
 CLI flags (via `uv run python -m claude_code_release_cadence`):
-- *(default)* — fetch fresh data, then build
+
+- _(default)_ — fetch fresh data, then build
 - `--fetch-only` — fetch data without building
 - `--build-only` — build from existing data without fetching
 - `-v` / `--verbose` — enable debug logging
@@ -39,6 +40,7 @@ make test-unit      # pytest only
 ```
 
 Run a single test:
+
 ```
 uv run pytest tests/test_compute.py::test_classify_major_0x -v
 ```
@@ -46,15 +48,20 @@ uv run pytest tests/test_compute.py::test_classify_major_0x -v
 ### Linting & Formatting
 
 ```
-make lint           # ruff check + format check (no changes)
-make format         # ruff auto-fix + format
+make lint           # all linters: ruff + prettier (no changes)
+make format         # all formatters: ruff + prettier
+make lint-py        # ruff check + format check only
+make format-py      # ruff auto-fix + format only
+make lint-md        # prettier --check on *.md files
+make format-md      # prettier --write on *.md files
 ```
 
 Ruff rules: E, F, W, I (errors, pyflakes, warnings, import sorting). Target: Python 3.12.
+Prettier formats Markdown files (`.prettierrc` at project root, `proseWrap: preserve`).
 
 ### Pre-commit Hooks
 
-`pre-commit` runs ruff check, ruff format check, mypy, and pytest on every commit. Install once with `make install-hooks`. To bypass temporarily: `git commit --no-verify`.
+`pre-commit` auto-fixes formatting (prettier, ruff) and auto-bumps the version, then runs mypy and pytest. If any files were modified by hooks, re-stage and commit again. Install once with `make install-hooks`. To bypass temporarily: `git commit --no-verify`.
 
 ## Architecture
 
@@ -67,13 +74,14 @@ Source lives in `src/claude_code_release_cadence/`. Five-stage pipeline orchestr
 5. **Export** (`export.py`) — writes `data.json`, `releases.csv`, `notes.json` to `data/cooked/`
 
 Supporting modules:
+
 - `config.py` — color palette assignment for major version series
 - `tz.py` — UTC to US Pacific timezone conversion
 
 ## Key Conventions
 
 - **Zero runtime dependencies** — stdlib only (urllib, json, csv, datetime, collections, re, pathlib, zoneinfo)
-- **Date-based versioning** (`YYYY.MM.DD.HHMM` US/Pacific) in `pyproject.toml` — **always bump to the current US/Pacific date and time after making changes**, then run `uv sync --dev` to update `uv.lock`
+- **Date-based versioning** (`YYYY.MM.DD.HHMM` America/Los_Angeles) in `pyproject.toml` — run `make bump-version` before committing (also auto-bumped by pre-commit hook if forgotten)
 - **TypedDict for data structures** — all inter-module data contracts defined in `compute.py`
 - **mypy** with `warn_return_any` and `warn_unused_configs` enabled
 - **Version series classification** — pre-1.0 uses minor (`0.2.x`), post-1.0 uses major.minor (`2.1.x`); see `classify_major()`

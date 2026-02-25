@@ -1,18 +1,31 @@
 # [Created with AI: Claude Code with Opus 4.6]
-# Runs lint + tests before commit; install with: make install-hooks
+# Auto-fixes formatting + runs lint/tests before commit; install with: make install-hooks
 
 repos:
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        types_or: [markdown]
+
   - repo: local
     hooks:
+      - id: bump-version
+        name: auto-bump version
+        entry: bash scripts/bump-version.sh
+        language: system
+        pass_filenames: false
+        always_run: true
+
       - id: ruff-check
-        name: ruff check
-        entry: uv run ruff check src/ tests/
+        name: ruff check --fix
+        entry: uv run ruff check --fix src/ tests/
         language: system
         pass_filenames: false
 
       - id: ruff-format
-        name: ruff format check
-        entry: uv run ruff format --check src/ tests/
+        name: ruff format
+        entry: uv run ruff format src/ tests/
         language: system
         pass_filenames: false
 

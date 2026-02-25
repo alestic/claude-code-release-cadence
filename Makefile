@@ -39,14 +39,32 @@ test-typing: $(INSTALL_STAMP) ## Run mypy type checking
 test: test-typing test-unit ## Run all tests (typing + unit)
 
 .PHONY: lint
-lint: $(INSTALL_STAMP) ## Run ruff linter and format checker
+lint: lint-py lint-md ## Run all linters and format checkers
+
+.PHONY: lint-py
+lint-py: $(INSTALL_STAMP)
 	uv run ruff check src/ tests/
 	uv run ruff format --check src/ tests/
 
+.PHONY: lint-md
+lint-md: ## Check Markdown formatting with Prettier
+	npx --yes prettier --check '**/*.md'
+
 .PHONY: format
-format: $(INSTALL_STAMP) ## Run ruff formatter and auto-fixer
+format: format-py format-md ## Run all formatters
+
+.PHONY: format-py
+format-py: $(INSTALL_STAMP)
 	uv run ruff format src/ tests/
 	uv run ruff check --fix src/ tests/
+
+.PHONY: format-md
+format-md: ## Format Markdown files with Prettier
+	npx --yes prettier --write '**/*.md'
+
+.PHONY: bump-version
+bump-version: ## Bump version to current America/Los_Angeles timestamp
+	bash scripts/bump-version.sh
 
 .PHONY: open
 open: ## Open generated dashboard in browser

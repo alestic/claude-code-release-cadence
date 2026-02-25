@@ -8,4 +8,5 @@ public/
 .mypy_cache/
 .pytest_cache/
 .ruff_cache/
+node_modules/
 .claude/settings.local.json

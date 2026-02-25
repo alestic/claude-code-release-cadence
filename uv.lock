@@ -13,7 +13,7 @@ wheels = [
 
 [[package]]
 name = "claude-code-release-cadence"
-version = "2026.2.25.122"
+version = "2026.2.24.1736"
 source = { editable = "." }
 
 [package.dev-dependencies]

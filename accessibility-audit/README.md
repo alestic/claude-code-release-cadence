@@ -8,25 +8,25 @@ Standard: WCAG 2.1 AA (with AAA notes where relevant)
 
 ## Summary
 
-| Category | Critical | Major | Minor | Pass |
-|---|---|---|---|---|
-| Color Contrast | 2 | 3 | 4 | — |
-| Keyboard Access | 2 | 1 | — | 1 |
-| Screen Reader / ARIA | 2 | 4 | 3 | 2 |
-| Semantic HTML | — | 2 | 2 | 3 |
-| Motion & Preferences | — | 1 | 1 | — |
-| **Total** | **6** | **11** | **10** | **6** |
+| Category             | Critical | Major  | Minor  | Pass  |
+| -------------------- | -------- | ------ | ------ | ----- |
+| Color Contrast       | 2        | 3      | 4      | —     |
+| Keyboard Access      | 2        | 1      | —      | 1     |
+| Screen Reader / ARIA | 2        | 4      | 3      | 2     |
+| Semantic HTML        | —        | 2      | 2      | 3     |
+| Motion & Preferences | —        | 1      | 1      | —     |
+| **Total**            | **6**    | **11** | **10** | **6** |
 
 ## Implementation Status
 
 All 27 findings have been addressed across four commits:
 
-| Phase | Findings | Status |
-|---|---|---|
-| Phase 1 — Critical | 1.1, 2.1, 2.2, 3.1, 3.2 | DONE (commit `0811655`) |
-| Phase 2 — Major | 1.2, 1.3, 1.5, 1.6, 2.3, 3.3, 3.4, 3.5, 3.6, 4.1, 4.2, 5.1 | DONE (commits `c0b6789`, Phase 4) |
-| Phase 3 — Minor | 1.7, 1.8, 1.9, 3.7, 3.8, 3.9, 4.3, 4.4, 5.2 | DONE (commit `c0b6789`) |
-| Not addressed | 1.4 (AAA-only), 6.1 (info/bonus) | WONTFIX — see notes |
+| Phase              | Findings                                                   | Status                            |
+| ------------------ | ---------------------------------------------------------- | --------------------------------- |
+| Phase 1 — Critical | 1.1, 2.1, 2.2, 3.1, 3.2                                    | DONE (commit `0811655`)           |
+| Phase 2 — Major    | 1.2, 1.3, 1.5, 1.6, 2.3, 3.3, 3.4, 3.5, 3.6, 4.1, 4.2, 5.1 | DONE (commits `c0b6789`, Phase 4) |
+| Phase 3 — Minor    | 1.7, 1.8, 1.9, 3.7, 3.8, 3.9, 4.3, 4.4, 5.2                | DONE (commit `c0b6789`)           |
+| Not addressed      | 1.4 (AAA-only), 6.1 (info/bonus)                           | WONTFIX — see notes               |
 
 ---
 
@@ -44,16 +44,16 @@ All 27 findings have been addressed across four commits:
 
 #### 1.2 [CRITICAL] Multiple chart palette colors fail AA-normal on light backgrounds — FIXED
 
-| Color | Hex | Ratio on `#f6f8fa` | AA normal | AA large |
-|---|---|---|---|---|
-| Orange | `#f97316` | 2.63:1 | FAIL | FAIL |
-| Green | `#22c55e` | 2.14:1 | FAIL | FAIL |
-| Yellow | `#eab308` | 1.80:1 | FAIL | FAIL |
-| Teal | `#14b8a6` | 2.34:1 | FAIL | FAIL |
-| Blue | `#3b82f6` | 3.45:1 | FAIL | PASS |
-| Purple | `#a855f7` | 3.72:1 | FAIL | PASS |
-| Pink | `#ec4899` | 3.31:1 | FAIL | PASS |
-| Rose | `#f43f5e` | 3.45:1 | FAIL | PASS |
+| Color  | Hex       | Ratio on `#f6f8fa` | AA normal | AA large |
+| ------ | --------- | ------------------ | --------- | -------- |
+| Orange | `#f97316` | 2.63:1             | FAIL      | FAIL     |
+| Green  | `#22c55e` | 2.14:1             | FAIL      | FAIL     |
+| Yellow | `#eab308` | 1.80:1             | FAIL      | FAIL     |
+| Teal   | `#14b8a6` | 2.34:1             | FAIL      | FAIL     |
+| Blue   | `#3b82f6` | 3.45:1             | FAIL      | PASS     |
+| Purple | `#a855f7` | 3.72:1             | FAIL      | PASS     |
+| Pink   | `#ec4899` | 3.31:1             | FAIL      | PASS     |
+| Rose   | `#f43f5e` | 3.45:1             | FAIL      | PASS     |
 
 **Fix applied:** Theme-aware palette with 8 darker variants for light mode (all AA-normal). `DARK_TO_LIGHT` map swaps colors on theme toggle; chart datasets, table dots, and sizeChart colors all update live. See `contrast-ratios.md` for the specific color values.
 
@@ -72,9 +72,10 @@ All 27 findings have been addressed across four commits:
 
 #### 1.5 [MAJOR] Color is the only distinguishing factor for version series in charts (1.4.1) — FIXED
 
-Chart datasets for different major versions were distinguished *only* by color.
+Chart datasets for different major versions were distinguished _only_ by color.
 
 **Fix applied:** Non-color differentiators via `DASH_PATTERNS` and `POINT_STYLES` arrays:
+
 - **Scatter chart** (gapChart): distinct `pointStyle` per series (circle, triangle, rect, rectRot, star, cross, crossRot, dash) with `usePointStyle` legend
 - **Day-of-week / Hour-of-day charts**: `borderDash` patterns per series with `borderWidth: 2`
 - **Size chart**: `borderDash: [6, 3]` on File Count line to distinguish from solid Size line

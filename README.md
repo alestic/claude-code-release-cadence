@@ -40,12 +40,12 @@ make build          # generate dashboard and exports (requires fetched data)
 
 ## What it produces
 
-| Output                                    | Description                                          |
-| ----------------------------------------- | ---------------------------------------------------- |
-| `public/index.html`                       | Interactive dashboard (open in any browser)          |
-| `data/cooked/data.json`                   | All computed statistics as JSON                      |
-| `data/cooked/notes.json`                  | Release notes with bullet counts and full text       |
-| `data/cooked/releases.csv`                | Flat release list (version, date, timestamp, major, unpacked_size, file_count) |
+| Output                     | Description                                                                    |
+| -------------------------- | ------------------------------------------------------------------------------ |
+| `public/index.html`        | Interactive dashboard (open in any browser)                                    |
+| `data/cooked/data.json`    | All computed statistics as JSON                                                |
+| `data/cooked/notes.json`   | Release notes with bullet counts and full text                                 |
+| `data/cooked/releases.csv` | Flat release list (version, date, timestamp, major, unpacked_size, file_count) |
 
 All outputs are generated from two public data sources:
 
@@ -56,8 +56,9 @@ All outputs are generated from two public data sources:
 
 ```
 make test           # run mypy type checking + pytest
-make lint           # run ruff linter and format checker
-make format         # run ruff formatter and auto-fixer
+make lint           # run all linters: ruff + prettier (no changes)
+make format         # run all formatters: ruff + prettier
+make bump-version   # bump version to current timestamp (run before committing)
 make clean          # remove public/ and data/cooked/
 make purge          # remove public/, data/, venv, caches
 make help           # show all targets

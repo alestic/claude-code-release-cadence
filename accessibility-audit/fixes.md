@@ -46,9 +46,16 @@ via `focusedOverlayVersion` tracking.
 ### 1.1 — Link color in light theme
 
 ```css
-:root, [data-theme="dark"] { --link: #58a6ff; }
-[data-theme="light"] { --link: #0969da; }
-.footer-grid a { color: var(--link); }
+:root,
+[data-theme="dark"] {
+  --link: #58a6ff;
+}
+[data-theme="light"] {
+  --link: #0969da;
+}
+.footer-grid a {
+  color: var(--link);
+}
 /* #0969da on #f6f8fa = 7.94:1 (passes AA + AAA) */
 ```
 
@@ -60,9 +67,14 @@ via `focusedOverlayVersion` tracking.
 
 ```js
 const DARK_TO_LIGHT = {
-  '#f97316':'#c05621', '#3b82f6':'#2563eb', '#b975f9':'#7c3aed',
-  '#22c55e':'#15803d', '#eab308':'#a16207', '#ec4899':'#be185d',
-  '#14b8a6':'#0f766e', '#f43f5e':'#be123c'
+  "#f97316": "#c05621",
+  "#3b82f6": "#2563eb",
+  "#b975f9": "#7c3aed",
+  "#22c55e": "#15803d",
+  "#eab308": "#a16207",
+  "#ec4899": "#be185d",
+  "#14b8a6": "#0f766e",
+  "#f43f5e": "#be123c",
 };
 ```
 
@@ -73,8 +85,26 @@ theme toggle handler.
 ### 1.5 — Non-color differentiators for chart datasets
 
 ```js
-var DASH_PATTERNS = [[], [8, 4], [2, 2], [12, 4, 2, 4], [8, 4, 2, 4, 2, 4], [16, 4], [4, 4], [2, 6]];
-var POINT_STYLES = ['circle', 'triangle', 'rect', 'rectRot', 'star', 'cross', 'crossRot', 'dash'];
+var DASH_PATTERNS = [
+  [],
+  [8, 4],
+  [2, 2],
+  [12, 4, 2, 4],
+  [8, 4, 2, 4, 2, 4],
+  [16, 4],
+  [4, 4],
+  [2, 6],
+];
+var POINT_STYLES = [
+  "circle",
+  "triangle",
+  "rect",
+  "rectRot",
+  "star",
+  "cross",
+  "crossRot",
+  "dash",
+];
 ```
 
 - **gapChart** (scatter): `pointStyle` per series + `usePointStyle: true` in legend
@@ -86,22 +116,38 @@ var POINT_STYLES = ['circle', 'triangle', 'rect', 'rectRot', 'star', 'cross', 'c
 ```js
 // In makeCell(), after setting background color:
 if (total > 0) {
-  var num = document.createElement('span');
-  num.className = 'heatmap-num';
+  var num = document.createElement("span");
+  num.className = "heatmap-num";
   num.textContent = total;
-  num.style.color = isDark ? 'rgba(255,255,255,0.85)'
-    : (intensity >= 0.5 ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.7)');
-  num.style.textShadow = isDark || intensity >= 0.5
-    ? '0 0 2px rgba(0,0,0,0.6)' : 'none';
+  num.style.color = isDark
+    ? "rgba(255,255,255,0.85)"
+    : intensity >= 0.5
+      ? "rgba(255,255,255,0.9)"
+      : "rgba(0,0,0,0.7)";
+  num.style.textShadow =
+    isDark || intensity >= 0.5 ? "0 0 2px rgba(0,0,0,0.6)" : "none";
   cell.appendChild(num);
 }
 ```
 
 ```css
-.heatmap-num { position: absolute; inset: 0; display: flex; align-items: center;
-  justify-content: center; font-size: 9px; font-weight: 600; pointer-events: none;
-  line-height: 1; z-index: 2; }
-@media (max-width: 640px) { .heatmap-num { display: none; } }
+.heatmap-num {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 600;
+  pointer-events: none;
+  line-height: 1;
+  z-index: 2;
+}
+@media (max-width: 640px) {
+  .heatmap-num {
+    display: none;
+  }
+}
 ```
 
 Theme toggle recolors via `updateHeatmapTheme()`.
@@ -111,8 +157,14 @@ Theme toggle recolors via `updateHeatmapTheme()`.
 Changed from small centered red dot to red border outline:
 
 ```css
-.heatmap-now { position: absolute; inset: 0; border: 2px solid #f43f5e;
-  border-radius: 3px; pointer-events: none; z-index: 1; }
+.heatmap-now {
+  position: absolute;
+  inset: 0;
+  border: 2px solid #f43f5e;
+  border-radius: 3px;
+  pointer-events: none;
+  z-index: 1;
+}
 ```
 
 Cell count number sits on top (z-index 2 > 1). Heatmap color intensity
@@ -144,7 +196,10 @@ Visually hidden until focused, then appears centered at top of viewport.
 ### 2.3 — Focus indicators
 
 ```css
-:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
 ```
 
 Theme-aware via `--link` variable (`#58a6ff` dark, `#0969da` light).
@@ -153,7 +208,9 @@ Theme-aware via `--link` variable (`#58a6ff` dark, `#0969da` light).
 
 ```css
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
@@ -161,7 +218,7 @@ Theme-aware via `--link` variable (`#58a6ff` dark, `#0969da` light).
 ```
 
 ```js
-if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
   Chart.defaults.animation = false;
 }
 ```
@@ -169,8 +226,12 @@ if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
 ### 3.3 — Theme toggle state
 
 Dynamic `aria-label` set on init and in the click handler:
+
 ```js
-btn.setAttribute('aria-label', 'Switch to ' + (next === 'dark' ? 'light' : 'dark') + ' theme');
+btn.setAttribute(
+  "aria-label",
+  "Switch to " + (next === "dark" ? "light" : "dark") + " theme",
+);
 ```
 
 ### 3.4 — Hide decorative SVGs
@@ -180,6 +241,7 @@ btn.setAttribute('aria-label', 'Switch to ' + (next === 'dark' ? 'light' : 'dark
 ### 1.3 — Purple contrast fix
 
 In `config.py`:
+
 ```python
 "#b975f9",  # purple (lightened for dark-theme AA contrast)
 ```
@@ -187,14 +249,14 @@ In `config.py`:
 ### 3.5 — Color dots
 
 ```js
-dot.setAttribute('aria-hidden', 'true');
+dot.setAttribute("aria-hidden", "true");
 ```
 
 ### 3.6 — Stats cards semantics
 
 ```js
-card.setAttribute('role', 'group');
-card.setAttribute('aria-label', s.label + ': ' + s.value);
+card.setAttribute("role", "group");
+card.setAttribute("aria-label", s.label + ": " + s.value);
 ```
 
 ---
@@ -204,7 +266,9 @@ card.setAttribute('aria-label', s.label + ': ' + s.value);
 ### 4.3 — Table caption
 
 ```html
-<caption class="sr-only">Release cadence statistics by major version series</caption>
+<caption class="sr-only">
+  Release cadence statistics by major version series
+</caption>
 ```
 
 ### 4.4 + 3.9 — `<th scope="col">` and `aria-label`
@@ -213,19 +277,20 @@ card.setAttribute('aria-label', s.label + ': ' + s.value);
 <th scope="col">Series</th>
 <th scope="col">Releases</th>
 <th scope="col">Span</th>
-<th scope="col" aria-label="Releases per Week">Releases/<wbr>Week</th>
-<th scope="col" aria-label="Entries per Week">Entries/<wbr>Week</th>
+<th scope="col" aria-label="Releases per Week">Releases/<wbr />Week</th>
+<th scope="col" aria-label="Entries per Week">Entries/<wbr />Week</th>
 <th scope="col">Date Range</th>
 ```
 
 ### 1.8 — Trend arrows
 
 Arrow character wrapped in `aria-hidden="true"` span:
+
 ```js
 if (s.trend.arrow) {
-  var ar = document.createElement('span');
-  ar.setAttribute('aria-hidden', 'true');
-  ar.textContent = s.trend.arrow + ' ';
+  var ar = document.createElement("span");
+  ar.setAttribute("aria-hidden", "true");
+  ar.textContent = s.trend.arrow + " ";
   tr.appendChild(ar);
 }
 tr.appendChild(document.createTextNode(s.trend.text));
@@ -234,7 +299,10 @@ tr.appendChild(document.createTextNode(s.trend.text));
 ### 1.9 — Tooltip border contrast
 
 ```css
-:root, [data-theme="dark"] { --tooltip-border: #545d68; }
+:root,
+[data-theme="dark"] {
+  --tooltip-border: #545d68;
+}
 ```
 
 ### 3.7 — External link indication
@@ -248,18 +316,21 @@ Appended to all `target="_blank"` links.
 ### 5.2 — Respect `prefers-color-scheme`
 
 ```js
-(function(){
-  var s = localStorage.getItem('theme');
-  if (!s) s = window.matchMedia('(prefers-color-scheme:light)').matches ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', s);
-})()
+(function () {
+  var s = localStorage.getItem("theme");
+  if (!s)
+    s = window.matchMedia("(prefers-color-scheme:light)").matches
+      ? "light"
+      : "dark";
+  document.documentElement.setAttribute("data-theme", s);
+})();
 ```
 
 ### 3.8 — Tooltip live regions
 
 ```js
-tip.setAttribute('role', 'status');
-tip.setAttribute('aria-live', 'polite');
+tip.setAttribute("role", "status");
+tip.setAttribute("aria-live", "polite");
 ```
 
 Applied to heatmap tooltip, overlay tooltip, and "Copied!" notification.
