@@ -12,7 +12,12 @@ Generates an interactive dashboard showing release frequency, day-of-week and ho
 
 **[View the live dashboard](https://alestic.github.io/claude-code-release-cadence/)**
 
-[![Dashboard screenshot](doc/screenshot.png)](https://alestic.github.io/claude-code-release-cadence/)
+<a href="https://alestic.github.io/claude-code-release-cadence/">
+  <img src="doc/screenshot.png"
+    alt="Stacked bar chart showing changelog entries per week from March 2025 to March 2026, colored by major version series (0.2.x, 1.0.x, 2.0.x, 2.1.x) with paler segments for fix entries"
+    title="Sample snapshot of one of many charts on the live dashboard">
+</a>
+<em>Sample snapshot — one of many charts on the <a href="https://alestic.github.io/claude-code-release-cadence/">live dashboard</a></em>
 
 > **Disclaimer:** This is an independent project. It is not affiliated with, endorsed by, or sponsored by Anthropic.
 
