@@ -106,6 +106,10 @@ install-hooks: $(INSTALL_STAMP) ## Install pre-commit git hooks
 cloc: ## Count lines of code
 	cloc --vcs=git --exclude-dir=.venv,legacy,data,public --exclude-lang=CSV,Text,Markdown,JSON .
 
+.PHONY: cloc-files
+cloc-files: ## Count lines of code per file
+	cloc --vcs=git --exclude-dir=.venv,legacy,data,public --exclude-lang=CSV,Text,Markdown,JSON --by-file .
+
 .PHONY: tree
 tree: ## Show git file tree
 	git ls-files | tree --fromfile -a --filesfirst
