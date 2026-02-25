@@ -41,7 +41,7 @@ var sizeBlue = getTheme() === 'light' ? DARK_TO_LIGHT['#3b82f6'] : '#3b82f6';
 var sizeGreen = getTheme() === 'light' ? DARK_TO_LIGHT['#22c55e'] : '#22c55e';
 if (sizeData.length > 0) {
   document.getElementById('sizeChartContainer').style.display = '';
-  new Chart(document.getElementById('sizeChart'), {
+  var sizeChart = new Chart(document.getElementById('sizeChart'), {
     type: 'line',
     data: {
       labels: sizeData.map(function (d) {
@@ -77,6 +77,7 @@ if (sizeData.length > 0) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: { padding: { top: 16 } },
       plugins: {
         legend: { position: 'top', labels: { boxWidth: 12, padding: 16 } },
         tooltip: {
@@ -111,6 +112,18 @@ if (sizeData.length > 0) {
       },
     },
   });
+  // Series labels: always visible (sizeChart shows all releases regardless of toggle)
+  sizeChart._showAllSeriesLabels = true;
+  sizeChart._seriesLabels = firstAppearanceLabels(
+    sizeData,
+    function (d) {
+      return d.major;
+    },
+    function (d) {
+      return new Date(d.timestamp).getTime();
+    },
+  );
+  sizeChart.update('none');
 }
 
 // --- Footer population ---
@@ -149,24 +162,12 @@ themeBtn.addEventListener('click', function () {
   applyPalette();
   updateHeatmapTheme();
   var t = THEME_CHART[next];
-  [
-    'gapChart',
-    'weekChart',
-    'weekNotesChart',
-    'dowChart',
-    'hourChart',
-    'notesChart',
-  ].forEach(function (id) {
+  VERSION_CHART_IDS.forEach(function (id) {
     var c = Chart.getChart(id);
     if (!c) return;
     c.data.datasets.forEach(function (ds) {
-      var major = ds.label;
-      var isFix = !COLORS[major];
-      if (isFix) {
-        Object.keys(COLORS).forEach(function (k) {
-          if (ds.label.startsWith(k)) major = k;
-        });
-      }
+      var major = getMajorFromLabel(ds.label);
+      var isFix = isFixLabel(ds.label);
       if (COLORS[major]) {
         var clr = COLORS[major];
         if (id === 'gapChart') {
@@ -250,3 +251,6 @@ document
     });
     h2.insertBefore(a, h2.firstChild);
   });
+
+// --- Initialize version visibility state (after all charts are created) ---
+initVersionVisibility();

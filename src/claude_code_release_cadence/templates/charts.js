@@ -1,5 +1,5 @@
 // --- Days between releases (scatter) ---
-new Chart(document.getElementById('gapChart'), {
+var gapChart = new Chart(document.getElementById('gapChart'), {
   type: 'scatter',
   data: {
     datasets: majorsOrder.map(function (major, mi) {
@@ -22,8 +22,14 @@ new Chart(document.getElementById('gapChart'), {
   options: {
     responsive: true,
     maintainAspectRatio: false,
+    layout: { padding: { top: 16 } },
     plugins: {
-      legend: { labels: { usePointStyle: true } },
+      legend: {
+        labels: { usePointStyle: true },
+        onClick: function (e, legendItem) {
+          syncLegendClick(legendItem.text, 'gapChart');
+        },
+      },
       tooltip: {
         callbacks: {
           title: (items) => {
@@ -44,6 +50,16 @@ new Chart(document.getElementById('gapChart'), {
     },
   },
 });
+gapChart._seriesLabels = firstAppearanceLabels(
+  gaps,
+  function (g) {
+    return g.major;
+  },
+  function (g) {
+    return new Date(g.timestamp).getTime();
+  },
+);
+gapChart.update('none');
 
 // --- Releases per week ---
 var weekChart = stackedBar(
@@ -65,7 +81,11 @@ var weekChart = stackedBar(
     tooltipFooter: totalFooter('releases'),
   },
 );
-weekChart._seriesLabels = findFirstAppearances(weekStacked, weekStackedFixonly);
+weekChart._seriesLabels = findFirstAppearances(
+  weekLabels,
+  weekStacked,
+  weekStackedFixonly,
+);
 weekChart.update('none');
 
 // --- Changelog entries per week ---
@@ -89,13 +109,14 @@ var weekNotesChart = stackedBar(
   },
 );
 weekNotesChart._seriesLabels = findFirstAppearances(
+  weekLabels,
   weekNotesStacked,
   weekNotesStackedFixes,
 );
 weekNotesChart.update('none');
 
 // --- Day of week (% by major) ---
-stackedBar(
+var dowChart = stackedBar(
   'dowChart',
   ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
   pctDatasets(dowStacked, dowStackedFixonly, ' (fix-only)').map(
@@ -123,7 +144,7 @@ const hourLabels = Array.from(
   { length: 24 },
   (_, i) => (i % 12 || 12) + (i < 12 ? 'a' : 'p'),
 );
-stackedBar(
+var hourChart = stackedBar(
   'hourChart',
   hourLabels,
   pctDatasets(hourStacked, hourStackedFixonly, ' (fix-only)').map(

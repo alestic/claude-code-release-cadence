@@ -13,6 +13,7 @@ const notesDatasets = majorsOrder.flatMap((m) =>
 // Outlier detection: find >2x gap and compute y-axis cap
 function computeOutlierCap(totals, maxOutliers = 3) {
   const desc = totals.slice().sort((a, b) => b - a);
+  if (desc.length === 0 || desc[0] === 0) return { threshold: 0, cap: 10 };
   let threshold = desc[0] + 1;
   for (let i = 0; i < desc.length - 1 && i < maxOutliers; i++) {
     if (desc[i] > desc[i + 1] * 2) {
@@ -31,7 +32,7 @@ function computeOutlierCap(totals, maxOutliers = 3) {
 
 // Helpers: compute visible totals and per-bar fix/non-fix from chart state
 function getVisibleTotals(chart) {
-  return notesData.map((_, i) => {
+  return chart.data.labels.map((_, i) => {
     let sum = 0;
     chart.data.datasets.forEach((ds, dsIdx) => {
       if (!chart.getDatasetMeta(dsIdx).hidden) sum += ds.data[i] || 0;
@@ -89,9 +90,10 @@ function showNotesOverlays(chart) {
     const overflowPx = (parts.total - o.cap) * pxPerUnit;
     const barWidth = meta.data[idx].width || 8;
     const barX = meta.data[idx].x;
-    const major = notesData[idx].major;
+    const origIdx = chart._indexMap ? chart._indexMap[idx] : idx;
+    const major = notesData[origIdx].major;
     const color = COLORS[major];
-    const version = notesData[idx].version;
+    const version = notesData[origIdx].version;
 
     const col = document.createElement('div');
     col.className = 'overlay-col';
@@ -184,6 +186,51 @@ function hideNotesOverlays() {
   notesOverlayContainer.style.display = 'none';
 }
 
+// Rebuild notesChart data arrays to exclude hidden major versions
+function rebuildNotesData() {
+  var keepIndices = [];
+  notesData.forEach(function (d, i) {
+    if (isMajorVisible(d.major)) keepIndices.push(i);
+  });
+  notesChart.data.labels = keepIndices.map(function (i) {
+    return notesData[i].version;
+  });
+  notesChart.data.datasets.forEach(function (ds) {
+    ds.data = keepIndices.map(function (i) {
+      return ds._origData[i];
+    });
+  });
+  notesChart._indexMap = keepIndices;
+  notesChart._seriesLabels = firstAppearanceLabels(
+    keepIndices,
+    function (origIdx) {
+      return notesData[origIdx].major;
+    },
+    function (origIdx, chartIdx) {
+      return chartIdx;
+    },
+  );
+}
+
+// Recompute outlier cap and overlays after visibility changes
+function recomputeNotesOutlier() {
+  rebuildNotesData();
+  const totals = getVisibleTotals(notesChart);
+  const result = computeOutlierCap(totals);
+  const inView =
+    notesSentinel.getBoundingClientRect().bottom <= window.innerHeight;
+  notesChart._outlier = {
+    threshold: result.threshold,
+    cap: result.cap,
+    visibleTotals: totals,
+    hovered: inView,
+  };
+  notesChart.options.scales.y.max = result.cap;
+  hideNotesOverlays();
+  notesChart.update('none');
+  if (inView) showNotesOverlays(notesChart);
+}
+
 // Plugin: draw static outlier labels above capped bars
 const notesOutlierPlugin = {
   id: 'notesOutlierLabels',
@@ -227,32 +274,20 @@ const notesChart = new Chart(notesCanvas, {
       legend: {
         position: 'top',
         labels: { boxWidth: 12, padding: 16 },
-        onClick(e, legendItem) {
-          const idx = legendItem.datasetIndex;
-          const meta = notesChart.getDatasetMeta(idx);
-          meta.hidden =
-            meta.hidden === null ? !notesChart.data.datasets[idx].hidden : null;
-          const totals = getVisibleTotals(notesChart);
-          const result = computeOutlierCap(totals);
-          const inView =
-            notesSentinel.getBoundingClientRect().bottom <= window.innerHeight;
-          notesChart._outlier = {
-            threshold: result.threshold,
-            cap: result.cap,
-            visibleTotals: totals,
-            hovered: inView,
-          };
-          notesChart.options.scales.y.max = result.cap;
-          hideNotesOverlays();
-          notesChart.update('none');
-          if (inView) showNotesOverlays(notesChart);
+        onClick: function (e, legendItem) {
+          syncLegendClick(legendItem.text, 'notesChart');
+          recomputeNotesOutlier();
         },
       },
       tooltip: {
         mode: 'index',
         filter: (item) => item.parsed.y !== 0,
         callbacks: {
-          title: (items) => notesData[items[0].dataIndex].version,
+          title: (items) => {
+            var di = items[0].dataIndex;
+            var origIdx = notesChart._indexMap ? notesChart._indexMap[di] : di;
+            return notesData[origIdx].version;
+          },
           label: (item) => {
             const kind = item.dataset.label.includes('(fixes)')
               ? 'fixes'
@@ -270,17 +305,7 @@ const notesChart = new Chart(notesCanvas, {
       x: {
         stacked: true,
         grid: { display: false },
-        ticks: {
-          autoSkip: false,
-          maxRotation: 0,
-          font: { size: 10 },
-          callback: function (val, idx) {
-            const cur = notesData[idx].major;
-            return cur !== (idx > 0 ? notesData[idx - 1].major : null)
-              ? cur
-              : '';
-          },
-        },
+        ticks: { display: false },
       },
       y: {
         stacked: true,
@@ -297,6 +322,23 @@ notesChart._outlier = {
   visibleTotals: notesData.map((d) => d.total),
   hovered: false,
 };
+// Store original data arrays for rebuilding on visibility changes
+notesChart.data.datasets.forEach(function (ds) {
+  ds._origData = ds.data.slice();
+});
+notesChart._indexMap = notesData.map(function (_, i) {
+  return i;
+});
+// Series labels: first bar index per major (category axis)
+notesChart._seriesLabels = firstAppearanceLabels(
+  notesData,
+  function (d) {
+    return d.major;
+  },
+  function (d, i) {
+    return i;
+  },
+);
 
 // Scroll-to-reveal: show overlays when chart bottom is visible
 new IntersectionObserver(
