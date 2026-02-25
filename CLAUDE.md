@@ -20,6 +20,7 @@ make all            # fetch + build in one step
 make open           # open dashboard in browser
 make clean          # remove build output (public/, data/cooked/)
 make purge          # clean + remove venv, raw data, and caches
+make install-hooks  # install pre-commit git hooks (one-time)
 make help           # show all targets
 ```
 
@@ -50,6 +51,10 @@ make format         # ruff auto-fix + format
 ```
 
 Ruff rules: E, F, W, I (errors, pyflakes, warnings, import sorting). Target: Python 3.12.
+
+### Pre-commit Hooks
+
+`pre-commit` runs ruff check, ruff format check, mypy, and pytest on every commit. Install once with `make install-hooks`. To bypass temporarily: `git commit --no-verify`.
 
 ## Architecture
 
