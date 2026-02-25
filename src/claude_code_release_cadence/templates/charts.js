@@ -116,7 +116,7 @@ weekNotesChart._seriesLabels = findFirstAppearances(
 weekNotesChart.update('none');
 
 // --- Day of week (% by major) ---
-var dowChart = stackedBar(
+stackedBar(
   'dowChart',
   ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
   pctDatasets(dowStacked, dowStackedFixonly, ' (fix-only)').map(
@@ -144,7 +144,7 @@ const hourLabels = Array.from(
   { length: 24 },
   (_, i) => (i % 12 || 12) + (i < 12 ? 'a' : 'p'),
 );
-var hourChart = stackedBar(
+stackedBar(
   'hourChart',
   hourLabels,
   pctDatasets(hourStacked, hourStackedFixonly, ' (fix-only)').map(

@@ -6,14 +6,10 @@ const totalDays = Math.round(
     86400000,
 );
 const overallAvgGap = totalDays / (releases.length - 1);
-const overallPerWeek = releases.length / (totalDays / 7);
 
 // 28-day window from last release
 const lastTs = new Date(releases[releases.length - 1].timestamp).getTime();
 const cutoff28d = lastTs - 28 * 86400000;
-const recentReleases = releases.filter(
-  (r) => new Date(r.timestamp).getTime() >= cutoff28d,
-);
 const recentGaps = gaps.filter(
   (g) => new Date(g.timestamp).getTime() >= cutoff28d,
 );
@@ -21,7 +17,6 @@ const recentAvgGap =
   recentGaps.length > 0
     ? recentGaps.reduce((s, g) => s + g.days, 0) / recentGaps.length
     : overallAvgGap;
-const recentPerWeek = recentReleases.length / 4;
 
 // Changelog entry totals and peak week
 const totalEntries = notesData.reduce(function (s, d) {

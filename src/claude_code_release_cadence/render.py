@@ -95,7 +95,15 @@ def render(
     replacements: dict[str, str] = {
         f"'__DATA_{k.upper()}__'": _json_for_html(data[k])  # type: ignore[literal-required]
         for k in _JSON_KEYS
+        if k != "releases"
     }
+    # Strip date/major from releases — JS only uses version, timestamp, length
+    replacements["'__DATA_RELEASES__'"] = _json_for_html(
+        [
+            {"version": r["version"], "timestamp": r["timestamp"]}
+            for r in data["releases"]
+        ]
+    )
     replacements["'__DATA_COLORS__'"] = _json_for_html(colors)
     # JS string placeholder (inside an existing JS string literal)
     replacements["__GENERATED_AT__"] = data["generated_at"]
