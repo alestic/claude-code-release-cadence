@@ -70,9 +70,10 @@
   .heatmap-header { font-size: 0.7em; color: var(--text-muted); text-align: center; padding: 2px 0; }
   .heatmap-row-label { font-size: 0.75em; color: var(--text-muted); display: flex; align-items: center; padding-right: 4px; }
   .heatmap-cell { aspect-ratio: 1; border-radius: 3px; cursor: default; position: relative; min-height: 16px; }
+  .heatmap-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; pointer-events: none; line-height: 1; z-index: 2; }
+  @media (max-width: 640px) { .heatmap-num { display: none; } }
   .heatmap-cell-tooltip { position: fixed; display: none; z-index: 100; background: var(--tooltip-bg); border: 1px solid var(--tooltip-border); border-radius: 6px; padding: 8px 10px; color: var(--text); font: 12px -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: pre-line; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
-  .heatmap-now { position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: #f43f5e; box-shadow: 0 0 0 2px var(--bg-card); pointer-events: none; animation: now-pulse 2s ease-in-out infinite; }
-  @keyframes now-pulse { 0%,100% { box-shadow: 0 0 0 2px var(--bg-card); } 50% { box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 5px rgba(244,63,94,0.4); } }
+  .heatmap-now { position: absolute; inset: 0; border: 2px solid #f43f5e; border-radius: 3px; pointer-events: none; z-index: 1; }
   .heatmap-legend { display: flex; align-items: center; gap: 4px; margin-top: 8px; justify-content: flex-end; font-size: 0.75em; color: var(--text-muted); }
   .heatmap-legend-cell { width: 16px; height: 16px; border-radius: 2px; }
   /* Footer styles */
@@ -163,7 +164,7 @@
 
 <div class="chart-container">
   <h2 id="activity-heatmap">Release Activity Heatmap</h2>
-  <p class="chart-desc">Changelog entries by day of week and hour (US/Pacific). Stronger color = more entries. Red dot marks the current day and hour. Based on release timestamps with changelog data.</p>
+  <p class="chart-desc">Changelog entries by day of week and hour (US/Pacific). Stronger color = more entries. Red border marks the current day and hour. Based on release timestamps with changelog data.</p>
   <div id="heatmap"></div>
 </div>
 
@@ -240,6 +241,27 @@ function applyPalette() {
 }
 applyPalette();
 
+// Non-color differentiators (WCAG 1.4.1 Use of Color)
+var POINT_STYLES_OTHER = ['triangle', 'rect', 'rectRot', 'star', 'cross', 'crossRot', 'dash'];
+function hatchPattern(bgColor, type) {
+  if (!type) return bgColor;
+  var s = 8, c = document.createElement('canvas');
+  c.width = s; c.height = s;
+  var x = c.getContext('2d');
+  x.fillStyle = bgColor;
+  x.fillRect(0, 0, s, s);
+  x.strokeStyle = 'rgba(255,255,255,0.35)';
+  x.lineWidth = 1.5;
+  if (type === 1) { x.beginPath(); x.moveTo(0,0); x.lineTo(s,s); x.moveTo(-2,s-2); x.lineTo(2,s+2); x.moveTo(s-2,-2); x.lineTo(s+2,2); x.stroke(); }
+  else if (type === 2) { x.beginPath(); x.moveTo(s,0); x.lineTo(0,s); x.moveTo(s+2,s-2); x.lineTo(s-2,s+2); x.moveTo(2,-2); x.lineTo(-2,2); x.stroke(); }
+  else if (type === 3) { x.beginPath(); x.moveTo(0,s/2); x.lineTo(s,s/2); x.stroke(); }
+  else if (type === 4) { x.beginPath(); x.moveTo(s/2,0); x.lineTo(s/2,s); x.stroke(); }
+  else if (type === 5) { x.beginPath(); x.moveTo(0,0); x.lineTo(s,s); x.moveTo(s,0); x.lineTo(0,s); x.stroke(); }
+  else if (type === 6) { x.fillStyle = 'rgba(255,255,255,0.35)'; x.beginPath(); x.arc(s/2,s/2,1.5,0,Math.PI*2); x.fill(); }
+  else if (type === 7) { x.beginPath(); x.moveTo(0,s/2); x.lineTo(s,s/2); x.moveTo(s/2,0); x.lineTo(s/2,s); x.stroke(); }
+  return x.createPattern(c, 'repeat');
+}
+
 // --- Shared chart helpers ---
 
 // Create solid + pale dataset pair for a major version
@@ -304,6 +326,38 @@ function applyChartTheme() {
 applyChartTheme();
 if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { Chart.defaults.animation = false; }
 Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+
+// Plugin: label first appearance of each version series above bars
+Chart.register({
+  id: 'seriesLabels',
+  afterDraw: function(chart) {
+    var sl = chart._seriesLabels;
+    if (!sl) return;
+    var ctx = chart.ctx;
+    var t = THEME_CHART[getTheme()];
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.font = 'bold 10px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = t.heading;
+    sl.forEach(function(s) {
+      var xPos = chart.scales.x.getPixelForValue(new Date(chart.data.labels[s.index]).getTime());
+      if (xPos >= chart.chartArea.left && xPos <= chart.chartArea.right) {
+        ctx.fillText(s.label, xPos, chart.chartArea.top + 4);
+      }
+    });
+    ctx.restore();
+  }
+});
+
+function findFirstAppearances(stacked, fixonly) {
+  return majorsOrder.map(function(m) {
+    for (var i = 0; i < weekLabels.length; i++) {
+      if ((stacked[m][i] || 0) + (fixonly[m][i] || 0) > 0) return { label: m, index: i };
+    }
+    return null;
+  }).filter(Boolean);
+}
 
 // --- Trend computation (28-day window) ---
 const statsGrid = document.getElementById('stats-grid');
@@ -377,16 +431,17 @@ const paceTrend = trendIndicator(recentEntriesPerWeek, overallEntriesPerWeek, fa
 // --- Days between releases (scatter) ---
 new Chart(document.getElementById('gapChart'), {
   type: 'scatter',
-  data: { datasets: majorsOrder.map(major => ({
+  data: { datasets: majorsOrder.map(function(major, mi) { return {
     label: major,
     data: gaps.filter(g => g.major === major).map(g => ({ x: g.timestamp, y: g.days })),
     backgroundColor: COLORS[major] + 'cc',
     borderColor: COLORS[major],
-    pointRadius: 3.5, pointHoverRadius: 6,
-  })) },
+    pointStyle: mi === majorsOrder.length - 1 ? 'circle' : POINT_STYLES_OTHER[mi % POINT_STYLES_OTHER.length],
+    pointRadius: mi === majorsOrder.length - 1 ? 3 : 4, pointHoverRadius: 6,
+  }; }) },
   options: {
     responsive: true, maintainAspectRatio: false,
-    plugins: { tooltip: { callbacks: {
+    plugins: { legend: { labels: { usePointStyle: true } }, tooltip: { callbacks: {
       title: items => { const idx = gaps.findIndex(g => g.timestamp === items[0].raw.x); return idx >= 0 ? gaps[idx].version : ''; },
       label: item => `${item.parsed.y.toFixed(1)} days since previous release`
     } } },
@@ -398,24 +453,28 @@ new Chart(document.getElementById('gapChart'), {
 });
 
 // --- Releases per week ---
-stackedBar('weekChart', weekLabels,
+var weekChart = stackedBar('weekChart', weekLabels,
   majorsOrder.flatMap(m => makeDatasetPair(m, weekStacked[m], weekStackedFixonly[m], ' (fix-only)', 'main')),
   { yTitle: 'Releases',
     xScale: { type: 'time', time: { unit: 'month' } },
     tooltipTitle: items => `Week of ${items[0].label}`,
     tooltipFooter: totalFooter('releases') });
+weekChart._seriesLabels = findFirstAppearances(weekStacked, weekStackedFixonly);
+weekChart.update('none');
 
 // --- Changelog entries per week ---
-stackedBar('weekNotesChart', weekLabels,
+var weekNotesChart = stackedBar('weekNotesChart', weekLabels,
   majorsOrder.flatMap(m => makeDatasetPair(m, weekNotesStacked[m], weekNotesStackedFixes[m], ' (fixes)', 'main')),
   { yTitle: 'Changelog entries',
     xScale: { type: 'time', time: { unit: 'month' } },
     tooltipTitle: items => `Week of ${items[0].label}`,
     tooltipFooter: totalFooter('entries') });
+weekNotesChart._seriesLabels = findFirstAppearances(weekNotesStacked, weekNotesStackedFixes);
+weekNotesChart.update('none');
 
 // --- Day of week (% by major) ---
 stackedBar('dowChart', ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-  pctDatasets(dowStacked, dowStackedFixonly, ' (fix-only)'),
+  pctDatasets(dowStacked, dowStackedFixonly, ' (fix-only)').map(function(ds, i) { var mi = Math.floor(i / 2); var pi = mi === majorsOrder.length - 1 ? 0 : mi % 7 + 1; ds._hatchType = pi; ds.backgroundColor = hatchPattern(ds.backgroundColor, pi); return ds; }),
   { legendPad: 10, yTicks: { callback: v => v + '%' },
     tooltipLabel: i => `${i.dataset.label}: ${i.parsed.y}%`,
     tooltipFooter: items => { const t = items.reduce((s, i) => s + i.parsed.y, 0); return `Total: ${t.toFixed(1)}%`; } });
@@ -423,7 +482,7 @@ stackedBar('dowChart', ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
 // --- Hour of day (% by major) ---
 const hourLabels = Array.from({ length: 24 }, (_, i) => (i % 12 || 12) + (i < 12 ? 'a' : 'p'));
 stackedBar('hourChart', hourLabels,
-  pctDatasets(hourStacked, hourStackedFixonly, ' (fix-only)'),
+  pctDatasets(hourStacked, hourStackedFixonly, ' (fix-only)').map(function(ds, i) { var mi = Math.floor(i / 2); var pi = mi === majorsOrder.length - 1 ? 0 : mi % 7 + 1; ds._hatchType = pi; ds.backgroundColor = hatchPattern(ds.backgroundColor, pi); return ds; }),
   { legendPad: 10,
     xScale: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } },
     yTicks: { callback: v => v + '%' },
@@ -744,6 +803,14 @@ majorsOrder.forEach(series => {
         ? 'rgba(56, 189, 248, ' + (0.15 + intensity * 0.75) + ')'
         : 'rgba(14, 116, 144, ' + (0.12 + intensity * 0.7) + ')';
     }
+    if (total > 0) {
+      var num = document.createElement('span');
+      num.className = 'heatmap-num';
+      num.textContent = total;
+      num.style.color = isDark ? 'rgba(255,255,255,0.85)' : (intensity >= 0.5 ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.7)');
+      num.style.textShadow = isDark || intensity >= 0.5 ? '0 0 2px rgba(0,0,0,0.6)' : 'none';
+      cell.appendChild(num);
+    }
     cell.addEventListener('mouseenter', function(e) {
       tip.textContent = cellTipText(this);
       tip.style.display = 'block';
@@ -896,6 +963,11 @@ function updateHeatmapTheme() {
         ? 'rgba(56, 189, 248, ' + (0.15 + intensity * 0.75) + ')'
         : 'rgba(14, 116, 144, ' + (0.12 + intensity * 0.7) + ')';
     }
+    var numEl = cell.querySelector('.heatmap-num');
+    if (numEl) {
+      numEl.style.color = isDark ? 'rgba(255,255,255,0.85)' : (intensity >= 0.5 ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.7)');
+      numEl.style.textShadow = isDark || intensity >= 0.5 ? '0 0 2px rgba(0,0,0,0.6)' : 'none';
+    }
   });
   document.querySelectorAll('.heatmap-legend-cell').forEach(function(swatch, i) {
     var intensity = [0, 0.25, 0.5, 0.75, 1][i];
@@ -933,6 +1005,7 @@ if (sizeData.length > 0) {
           yAxisID: 'yFiles',
           tension: 0.3,
           pointRadius: 2,
+          borderDash: [6, 3],
         },
       ],
     },
@@ -993,6 +1066,7 @@ themeBtn.addEventListener('click', function() {
         if (id === 'gapChart') { ds.backgroundColor = clr + 'cc'; ds.borderColor = clr; }
         else if (isFix) { ds.backgroundColor = COLORS_PALE[major]; ds.borderColor = clr + '88'; }
         else { ds.backgroundColor = clr + 'cc'; ds.borderColor = clr; }
+        if (ds._hatchType) ds.backgroundColor = hatchPattern(ds.backgroundColor, ds._hatchType);
       }
     });
     Object.values(c.options.scales).forEach(function(s) {
