@@ -5,6 +5,7 @@ from pathlib import Path
 
 from claude_code_release_cadence.compute import (
     _merge_changelog_versions,
+    _version_tuple,
     classify_major,
     compute_all,
     parse_release_notes,
@@ -43,6 +44,29 @@ def test_classify_major_future() -> None:
     """Future version series should work dynamically."""
     assert classify_major("3.5.2") == "3.5.x"
     assert classify_major("10.2.7") == "10.2.x"
+
+
+# --- _version_tuple ---
+
+
+def test_version_tuple_normal() -> None:
+    """Standard semver should produce numeric tuple."""
+    assert _version_tuple("1.2.3") == (1, 2, 3)
+
+
+def test_version_tuple_prerelease() -> None:
+    """Pre-release tags should be stripped, keeping leading numeric parts."""
+    assert _version_tuple("1.0.0-beta.1") == (1, 0, 0)
+
+
+def test_version_tuple_two_parts() -> None:
+    """Two-part versions should work."""
+    assert _version_tuple("0.2") == (0, 2)
+
+
+def test_version_tuple_prerelease_mid() -> None:
+    """Non-numeric suffix mid-version stops parsing."""
+    assert _version_tuple("2.1.0-rc1") == (2, 1, 0)
 
 
 # --- parse_release_notes ---

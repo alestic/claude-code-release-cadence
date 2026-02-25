@@ -1,3 +1,22 @@
+// --- Heatmap color helpers (shared across makeCell, theme update, legend) ---
+function heatmapBg(intensity, isDark) {
+  if (intensity === 0)
+    return isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)';
+  return isDark
+    ? 'rgba(56, 189, 248, ' + (0.15 + intensity * 0.75) + ')'
+    : 'rgba(14, 116, 144, ' + (0.12 + intensity * 0.7) + ')';
+}
+function heatmapNumColor(intensity, isDark) {
+  return isDark
+    ? 'rgba(255,255,255,0.85)'
+    : intensity >= 0.5
+      ? 'rgba(255,255,255,0.9)'
+      : 'rgba(0,0,0,0.7)';
+}
+function heatmapNumShadow(intensity, isDark) {
+  return isDark || intensity >= 0.5 ? '0 0 2px rgba(0,0,0,0.6)' : 'none';
+}
+
 // --- Heatmap (DOW x Hour, pure CSS grid — wide + narrow layouts) ---
 (function () {
   const container = document.getElementById('heatmap');
@@ -69,26 +88,13 @@
         features +
         ' features)',
     );
-    if (total === 0) {
-      cell.style.background = isDark
-        ? 'rgba(255,255,255,0.03)'
-        : 'rgba(0,0,0,0.03)';
-    } else {
-      cell.style.background = isDark
-        ? 'rgba(56, 189, 248, ' + (0.15 + intensity * 0.75) + ')'
-        : 'rgba(14, 116, 144, ' + (0.12 + intensity * 0.7) + ')';
-    }
+    cell.style.background = heatmapBg(intensity, isDark);
     if (total > 0) {
       var num = document.createElement('span');
       num.className = 'heatmap-num';
       num.textContent = total;
-      num.style.color = isDark
-        ? 'rgba(255,255,255,0.85)'
-        : intensity >= 0.5
-          ? 'rgba(255,255,255,0.9)'
-          : 'rgba(0,0,0,0.7)';
-      num.style.textShadow =
-        isDark || intensity >= 0.5 ? '0 0 2px rgba(0,0,0,0.6)' : 'none';
+      num.style.color = heatmapNumColor(intensity, isDark);
+      num.style.textShadow = heatmapNumShadow(intensity, isDark);
       cell.appendChild(num);
     }
     cell.addEventListener('mouseenter', function (e) {
@@ -250,15 +256,7 @@
   [0, 0.25, 0.5, 0.75, 1].forEach(function (intensity) {
     const swatch = document.createElement('div');
     swatch.className = 'heatmap-legend-cell';
-    const dk = getTheme() === 'dark';
-    swatch.style.background =
-      intensity === 0
-        ? dk
-          ? 'rgba(255,255,255,0.03)'
-          : 'rgba(0,0,0,0.03)'
-        : dk
-          ? 'rgba(56, 189, 248, ' + (0.15 + intensity * 0.75) + ')'
-          : 'rgba(14, 116, 144, ' + (0.12 + intensity * 0.7) + ')';
+    swatch.style.background = heatmapBg(intensity, getTheme() === 'dark');
     legend.appendChild(swatch);
   });
   const moreLabel = document.createElement('span');
@@ -274,37 +272,16 @@ function updateHeatmapTheme() {
   document.querySelectorAll('.heatmap-cell').forEach(function (cell) {
     const total = +cell.dataset.total;
     const intensity = total > 0 ? Math.sqrt(total / maxVal) : 0;
-    if (total === 0) {
-      cell.style.background = isDark
-        ? 'rgba(255,255,255,0.03)'
-        : 'rgba(0,0,0,0.03)';
-    } else {
-      cell.style.background = isDark
-        ? 'rgba(56, 189, 248, ' + (0.15 + intensity * 0.75) + ')'
-        : 'rgba(14, 116, 144, ' + (0.12 + intensity * 0.7) + ')';
-    }
+    cell.style.background = heatmapBg(intensity, isDark);
     var numEl = cell.querySelector('.heatmap-num');
     if (numEl) {
-      numEl.style.color = isDark
-        ? 'rgba(255,255,255,0.85)'
-        : intensity >= 0.5
-          ? 'rgba(255,255,255,0.9)'
-          : 'rgba(0,0,0,0.7)';
-      numEl.style.textShadow =
-        isDark || intensity >= 0.5 ? '0 0 2px rgba(0,0,0,0.6)' : 'none';
+      numEl.style.color = heatmapNumColor(intensity, isDark);
+      numEl.style.textShadow = heatmapNumShadow(intensity, isDark);
     }
   });
   document
     .querySelectorAll('.heatmap-legend-cell')
     .forEach(function (swatch, i) {
-      var intensity = [0, 0.25, 0.5, 0.75, 1][i];
-      swatch.style.background =
-        intensity === 0
-          ? isDark
-            ? 'rgba(255,255,255,0.03)'
-            : 'rgba(0,0,0,0.03)'
-          : isDark
-            ? 'rgba(56, 189, 248, ' + (0.15 + intensity * 0.75) + ')'
-            : 'rgba(14, 116, 144, ' + (0.12 + intensity * 0.7) + ')';
+      swatch.style.background = heatmapBg([0, 0.25, 0.5, 0.75, 1][i], isDark);
     });
 }

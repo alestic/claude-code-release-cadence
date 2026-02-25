@@ -37,23 +37,27 @@ TEMPLATE: Path = Path(
     )
 )
 
-# Data and output paths are relative to CWD so the tool works both
-# from a repo checkout and when installed via uvx.
-CWD: Path = Path.cwd()
-DATA_DIR: Path = CWD / "data" / "raw"
-COOKED_DIR: Path = CWD / "data" / "cooked"
-PUBLIC_DIR: Path = CWD / "public"
 
-# Input files
-NPM_TIMES: Path = DATA_DIR / "npm-times.json"
-NPM_SIZES: Path = DATA_DIR / "npm-sizes.json"
-CHANGELOG: Path = DATA_DIR / "CHANGELOG.md"
+def _cwd_paths() -> tuple[Path, Path, Path, Path, Path, Path, Path, Path]:
+    """Resolve data/output paths relative to CWD at call time.
 
-# Output files
-OUTPUT_HTML: Path = PUBLIC_DIR / "index.html"
-OUTPUT_DATA_JSON: Path = COOKED_DIR / "data.json"
-OUTPUT_RELEASES_CSV: Path = COOKED_DIR / "releases.csv"
-OUTPUT_NOTES_JSON: Path = COOKED_DIR / "notes.json"
+    Returns (npm_times, npm_sizes, changelog, output_html,
+             output_data_json, output_releases_csv, output_notes_json, template).
+    """
+    cwd: Path = Path.cwd()
+    data_dir: Path = cwd / "data" / "raw"
+    cooked_dir: Path = cwd / "data" / "cooked"
+    public_dir: Path = cwd / "public"
+    return (
+        data_dir / "npm-times.json",
+        data_dir / "npm-sizes.json",
+        data_dir / "CHANGELOG.md",
+        public_dir / "index.html",
+        cooked_dir / "data.json",
+        cooked_dir / "releases.csv",
+        cooked_dir / "notes.json",
+        TEMPLATE,
+    )
 
 
 log: logging.Logger = logging.getLogger(__name__)
@@ -61,15 +65,27 @@ log: logging.Logger = logging.getLogger(__name__)
 
 def do_fetch() -> None:
     """Fetch all raw data sources."""
-    fetch_npm_data(NPM_TIMES, NPM_SIZES)
-    fetch_changelog(CHANGELOG)
+    npm_times_path, npm_sizes_path, changelog_path, *_ = _cwd_paths()
+    fetch_npm_data(npm_times_path, npm_sizes_path)
+    fetch_changelog(changelog_path)
     log.info("Fetch complete.")
 
 
 def do_build() -> None:
     """Build dashboard HTML and exports from existing data."""
+    (
+        npm_times_path,
+        npm_sizes_path,
+        changelog_path,
+        output_html,
+        output_data_json,
+        output_releases_csv,
+        output_notes_json,
+        template,
+    ) = _cwd_paths()
+
     missing: list[Path] = [
-        p for p in [NPM_TIMES, CHANGELOG, TEMPLATE] if not p.exists()
+        p for p in [npm_times_path, changelog_path, template] if not p.exists()
     ]
     if missing:
         for p in missing:
@@ -78,9 +94,9 @@ def do_build() -> None:
         sys.exit(1)
 
     log.info("Loading data...")
-    npm_times: dict[str, str] = load_npm_times(NPM_TIMES)
-    changelog: dict[str, str] = load_changelog(CHANGELOG)
-    npm_sizes: dict[str, dict[str, int]] = load_npm_sizes(NPM_SIZES)
+    npm_times: dict[str, str] = load_npm_times(npm_times_path)
+    changelog: dict[str, str] = load_changelog(changelog_path)
+    npm_sizes: dict[str, dict[str, int]] = load_npm_sizes(npm_sizes_path)
 
     log.info("Computing statistics (%d versions)...", len(npm_times))
     data: ComputedData = compute_all(
@@ -92,14 +108,14 @@ def do_build() -> None:
     ga_id: str = os.environ.get("GA_MEASUREMENT_ID", "")
 
     log.info("Exporting data...")
-    export_json(data, OUTPUT_DATA_JSON)
+    export_json(data, output_data_json)
     export_releases_csv(
-        data["releases"], OUTPUT_RELEASES_CSV, size_data=data["size_data"]
+        data["releases"], output_releases_csv, size_data=data["size_data"]
     )
-    export_notes_json(data["notes_data"], changelog, OUTPUT_NOTES_JSON)
+    export_notes_json(data["notes_data"], changelog, output_notes_json)
 
     log.info("Rendering dashboard...")
-    render(TEMPLATE, OUTPUT_HTML, data, colors, ga_measurement_id=ga_id)
+    render(template, output_html, data, colors, ga_measurement_id=ga_id)
 
     log.info("Build complete.")
 

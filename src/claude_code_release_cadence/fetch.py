@@ -4,6 +4,8 @@
 import json
 import logging
 import urllib.request
+import urllib.response
+from importlib.metadata import version as pkg_version
 from pathlib import Path
 
 log: logging.Logger = logging.getLogger(__name__)
@@ -15,6 +17,25 @@ CHANGELOG_URL: str = (
 
 REQUEST_TIMEOUT: int = 30  # seconds
 MAX_RESPONSE_BYTES: int = 50 * 1024 * 1024  # 50 MB
+
+REPO_URL: str = "https://github.com/alestic/claude-code-release-cadence"
+
+
+def _user_agent() -> str:
+    """Build a User-Agent string identifying this tool and its repo."""
+    try:
+        ver: str = pkg_version("claude-code-release-cadence")
+    except Exception:
+        ver = "unknown"
+    return f"release-cadence-for-claude-code/{ver} (+{REPO_URL})"
+
+
+def _urlopen(url: str, timeout: int = REQUEST_TIMEOUT) -> urllib.response.addinfourl:
+    """Open a URL with a descriptive User-Agent header."""
+    req: urllib.request.Request = urllib.request.Request(
+        url, headers={"User-Agent": _user_agent()}
+    )
+    return urllib.request.urlopen(req, timeout=timeout)  # type: ignore[no-any-return]
 
 
 def _read_limited(
@@ -51,7 +72,7 @@ def fetch_npm_data(
     log.info("Fetching npm package data from registry...")
     npm_times_path.parent.mkdir(parents=True, exist_ok=True)
     npm_sizes_path.parent.mkdir(parents=True, exist_ok=True)
-    with urllib.request.urlopen(NPM_REGISTRY_URL, timeout=REQUEST_TIMEOUT) as resp:
+    with _urlopen(NPM_REGISTRY_URL) as resp:
         raw: dict = json.loads(_read_limited(resp))
 
     # Extract timestamps
@@ -90,7 +111,7 @@ def fetch_changelog(
     """
     log.info("Fetching CHANGELOG.md...")
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    with urllib.request.urlopen(url, timeout=REQUEST_TIMEOUT) as resp:
+    with _urlopen(url) as resp:
         data: bytes = _read_limited(resp)
     with open(output_path, "wb") as f:
         f.write(data)

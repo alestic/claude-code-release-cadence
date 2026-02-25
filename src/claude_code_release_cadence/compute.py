@@ -21,6 +21,12 @@ class Release(TypedDict):
     major: str  # e.g. "2.1.x"
 
 
+class _InternalRelease(Release):
+    """Release with extra datetime field for internal computation."""
+
+    dt_pac: datetime
+
+
 class Gap(TypedDict):
     """Gap between consecutive releases."""
 
@@ -101,8 +107,27 @@ FIX_PATTERN: re.Pattern[str] = re.compile(
 
 
 def _version_tuple(version: str) -> tuple[int, ...]:
-    """Convert "1.2.3" to (1, 2, 3) for numeric comparison."""
-    return tuple(int(p) for p in version.split("."))
+    """Convert "1.2.3" to (1, 2, 3) for numeric comparison.
+
+    Non-numeric suffixes (e.g. "1.0.0-beta.1") are stripped — only the
+    leading numeric segments are used for ordering.
+    """
+    parts: list[int] = []
+    for p in version.split("."):
+        try:
+            parts.append(int(p))
+        except ValueError:
+            # Strip non-numeric suffix (e.g. "0-beta" → 0)
+            digits: str = ""
+            for ch in p:
+                if ch.isdigit():
+                    digits += ch
+                else:
+                    break
+            if digits:
+                parts.append(int(digits))
+            break
+    return tuple(parts)
 
 
 def _merge_changelog_versions(
@@ -184,10 +209,10 @@ def parse_release_notes(body: str) -> tuple[int, int, int] | None:
 
 
 def _stacked_by_major(
-    releases: list[dict],
+    releases: list[_InternalRelease],
     majors_order: list[str],
     fix_only: set[str],
-    key_fn: Callable[[dict], Any],
+    key_fn: Callable[[_InternalRelease], Any],
     buckets: Sequence,
 ) -> tuple[dict[str, list[int]], dict[str, list[int]]]:
     """Build (stacked, stacked_fixonly) dicts for a bucketing function.
@@ -218,9 +243,9 @@ def _stacked_by_major(
 # --- Sub-computations ---
 
 
-def _build_releases(npm_times: dict[str, str]) -> list[dict]:
+def _build_releases(npm_times: dict[str, str]) -> list[_InternalRelease]:
     """Build sorted release list with Pacific datetimes."""
-    releases: list[dict] = []
+    releases: list[_InternalRelease] = []
     for version, timestamp in sorted(npm_times.items(), key=lambda x: x[1]):
         dt_utc: datetime = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
         dt_pac: datetime = to_pacific(dt_utc)
@@ -236,7 +261,7 @@ def _build_releases(npm_times: dict[str, str]) -> list[dict]:
     return releases
 
 
-def _extract_majors_order(releases: list[dict]) -> list[str]:
+def _extract_majors_order(releases: list[_InternalRelease]) -> list[str]:
     """Derive majors_order from chronological first appearance."""
     seen: set[str] = set()
     order: list[str] = []
@@ -247,7 +272,7 @@ def _extract_majors_order(releases: list[dict]) -> list[str]:
     return order
 
 
-def _compute_gaps(releases: list[dict]) -> list[Gap]:
+def _compute_gaps(releases: list[_InternalRelease]) -> list[Gap]:
     """Compute day gaps between consecutive releases."""
     return [
         {
@@ -281,7 +306,7 @@ def _build_notes_lookup(
 
 
 def _compute_weekly(
-    releases: list[dict],
+    releases: list[_InternalRelease],
     majors_order: list[str],
     fix_only: set[str],
     notes_by_version: dict[str, tuple[int, int, int]],
@@ -345,11 +370,11 @@ def _compute_weekly(
 
 
 def _compute_major_stats(
-    releases: list[dict],
+    releases: list[_InternalRelease],
     majors_order: list[str],
 ) -> dict[str, MajorStats]:
     """Compute per-major-version statistics."""
-    by_major: defaultdict[str, list[dict]] = defaultdict(list)
+    by_major: defaultdict[str, list[_InternalRelease]] = defaultdict(list)
     for r in releases:
         by_major[r["major"]].append(r)
 
@@ -370,7 +395,7 @@ def _compute_major_stats(
 
 
 def _compute_notes_data(
-    releases: list[dict],
+    releases: list[_InternalRelease],
     notes_by_version: dict[str, tuple[int, int, int]],
 ) -> list[NotesRecord]:
     """Build release notes records for versions with changelog entries."""
@@ -393,7 +418,7 @@ def _compute_notes_data(
 
 
 def _compute_heatmap_dow_hour(
-    releases: list[dict],
+    releases: list[_InternalRelease],
     notes_by_version: dict[str, tuple[int, int, int]],
 ) -> tuple[list[list[int]], list[list[int]]]:
     """Build DOW x Hour heatmaps from changelog entry counts.
@@ -416,7 +441,7 @@ def _compute_heatmap_dow_hour(
 
 
 def _compute_size_data(
-    releases: list[dict],
+    releases: list[_InternalRelease],
     npm_sizes: dict[str, dict[str, int]],
 ) -> list[SizeRecord]:
     """Build size records for versions that have npm dist size info."""
