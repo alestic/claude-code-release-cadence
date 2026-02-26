@@ -4,7 +4,7 @@
 
 [![Tests](https://github.com/alestic/claude-code-release-cadence/actions/workflows/test.yml/badge.svg)](https://github.com/alestic/claude-code-release-cadence/actions/workflows/test.yml)
 [![Deploy](https://github.com/alestic/claude-code-release-cadence/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/alestic/claude-code-release-cadence/actions/workflows/deploy-pages.yml)
-[![Website](https://img.shields.io/website?url=https%3A%2F%2Falestic.github.io%2Fclaude-code-release-cadence%2F&label=dashboard)](https://alestic.github.io/claude-code-release-cadence/)
+[![Website](https://img.shields.io/website?url=https%3A%2F%2Falestic.github.io%2Fclaude-code-release-cadence%2F&label=Dashboard)](https://alestic.github.io/claude-code-release-cadence/)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 Analyze and visualize the release cadence of [Claude Code](https://github.com/anthropics/claude-code) (`@anthropic-ai/claude-code` on npm).
