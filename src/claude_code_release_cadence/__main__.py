@@ -103,7 +103,9 @@ def do_build() -> None:
         npm_times, changelog=changelog, npm_sizes=npm_sizes
     )
 
-    colors: dict[str, str] = assign_colors(data["majors_order"])
+    colors_dark: dict[str, str]
+    colors_light: dict[str, str]
+    colors_dark, colors_light = assign_colors(data["majors_order"])
 
     ga_id: str = os.environ.get("GA_MEASUREMENT_ID", "")
 
@@ -115,7 +117,14 @@ def do_build() -> None:
     export_notes_json(data["notes_data"], changelog, output_notes_json)
 
     log.info("Rendering dashboard...")
-    render(template, output_html, data, colors, ga_measurement_id=ga_id)
+    render(
+        template,
+        output_html,
+        data,
+        colors_dark,
+        colors_light,
+        ga_measurement_id=ga_id,
+    )
 
     log.info("Build complete.")
 

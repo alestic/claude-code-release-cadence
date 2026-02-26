@@ -23,24 +23,10 @@ function getTheme() {
   return document.documentElement.getAttribute('data-theme') || 'dark';
 }
 
-// --- Dynamic colors (injected from config.py palette) ---
-const COLORS = '__DATA_COLORS__';
-const COLORS_DARK = Object.assign({}, COLORS);
-// Light-theme palette: darker variants that pass AA-normal (4.5:1) on #f6f8fa
-const DARK_TO_LIGHT = {
-  '#f97316': '#c05621',
-  '#3b82f6': '#2563eb',
-  '#b975f9': '#7c3aed',
-  '#22c55e': '#15803d',
-  '#eab308': '#a16207',
-  '#ec4899': '#be185d',
-  '#14b8a6': '#0f766e',
-  '#f43f5e': '#be123c',
-};
-const COLORS_LIGHT = {};
-Object.entries(COLORS_DARK).forEach(([k, v]) => {
-  COLORS_LIGHT[k] = DARK_TO_LIGHT[v] || v;
-});
+// --- Dynamic colors (injected from config.py palettes) ---
+const COLORS_DARK = '__DATA_COLORS_DARK__';
+const COLORS_LIGHT = '__DATA_COLORS_LIGHT__';
+const COLORS = {};
 const COLORS_PALE = {};
 function applyPalette() {
   var src = getTheme() === 'light' ? COLORS_LIGHT : COLORS_DARK;
@@ -72,7 +58,9 @@ function hatchPattern(bgColor, type) {
   var x = c.getContext('2d');
   x.fillStyle = bgColor;
   x.fillRect(0, 0, s, s);
-  x.strokeStyle = 'rgba(255,255,255,0.35)';
+  var hatchColor =
+    getTheme() === 'light' ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.35)';
+  x.strokeStyle = hatchColor;
   x.lineWidth = 1.5;
   if (type === 1) {
     x.beginPath();
@@ -110,7 +98,7 @@ function hatchPattern(bgColor, type) {
     x.lineTo(0, s);
     x.stroke();
   } else if (type === 6) {
-    x.fillStyle = 'rgba(255,255,255,0.35)';
+    x.fillStyle = hatchColor;
     x.beginPath();
     x.arc(s / 2, s / 2, 1.5, 0, Math.PI * 2);
     x.fill();

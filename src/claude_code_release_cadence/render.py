@@ -74,7 +74,8 @@ def render(
     template_path: Path,
     output_path: Path,
     data: ComputedData,
-    colors: dict[str, str],
+    colors_dark: dict[str, str],
+    colors_light: dict[str, str],
     *,
     ga_measurement_id: str = "",
 ) -> None:
@@ -104,7 +105,8 @@ def render(
             for r in data["releases"]
         ]
     )
-    replacements["'__DATA_COLORS__'"] = _json_for_html(colors)
+    replacements["'__DATA_COLORS_DARK__'"] = _json_for_html(colors_dark)
+    replacements["'__DATA_COLORS_LIGHT__'"] = _json_for_html(colors_light)
     # JS string placeholder (inside an existing JS string literal)
     replacements["__GENERATED_AT__"] = data["generated_at"]
 

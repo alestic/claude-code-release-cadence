@@ -37,8 +37,8 @@ majorsOrder.forEach((series) => {
 });
 
 // --- Package size chart (dual-axis) ---
-var sizeBlue = getTheme() === 'light' ? DARK_TO_LIGHT['#3b82f6'] : '#3b82f6';
-var sizeGreen = getTheme() === 'light' ? DARK_TO_LIGHT['#22c55e'] : '#22c55e';
+var sizeBlue = getTheme() === 'light' ? '#2563eb' : '#3b82f6';
+var sizeGreen = getTheme() === 'light' ? '#15803d' : '#22c55e';
 if (sizeData.length > 0) {
   document.getElementById('sizeChartContainer').style.display = '';
   var sizeChart = new Chart(document.getElementById('sizeChart'), {
@@ -193,15 +193,13 @@ themeBtn.addEventListener('click', function () {
     if (c.options.plugins.legend && c.options.plugins.legend.labels) {
       c.options.plugins.legend.labels.color = t.text;
     }
-    c.update('none');
+    c.update();
   });
   // sizeChart: theme-aware blue/green
   var sc = Chart.getChart('sizeChart');
   if (sc) {
-    var sBlue = DARK_TO_LIGHT['#3b82f6'],
-      sGreen = DARK_TO_LIGHT['#22c55e'];
-    var blue = next === 'light' ? sBlue : '#3b82f6',
-      green = next === 'light' ? sGreen : '#22c55e';
+    var blue = next === 'light' ? '#2563eb' : '#3b82f6',
+      green = next === 'light' ? '#15803d' : '#22c55e';
     sc.data.datasets[0].borderColor = blue;
     sc.data.datasets[0].backgroundColor = blue + '44';
     sc.data.datasets[1].borderColor = green;
@@ -214,12 +212,16 @@ themeBtn.addEventListener('click', function () {
     });
     if (sc.options.plugins.legend && sc.options.plugins.legend.labels)
       sc.options.plugins.legend.labels.color = t.text;
-    sc.update('none');
+    sc.update();
   }
   // Update table color dots
   document.querySelectorAll('.color-dot').forEach(function (dot, i) {
     if (i < majorsOrder.length) dot.style.background = COLORS[majorsOrder[i]];
   });
+  // Rebuild notes chart overlays with new theme colors
+  if (typeof recomputeNotesOutlier === 'function') {
+    recomputeNotesOutlier();
+  }
 });
 
 // --- Anchor links on section headings ---
