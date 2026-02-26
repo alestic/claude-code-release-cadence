@@ -4,7 +4,7 @@
 
 [![Tests](https://github.com/alestic/claude-code-release-cadence/actions/workflows/test.yml/badge.svg)](https://github.com/alestic/claude-code-release-cadence/actions/workflows/test.yml)
 [![Deploy](https://github.com/alestic/claude-code-release-cadence/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/alestic/claude-code-release-cadence/actions/workflows/deploy-pages.yml)
-[![License](https://img.shields.io/github/license/alestic/claude-code-release-cadence)](LICENSE)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 Analyze and visualize the release cadence of [Claude Code](https://github.com/anthropics/claude-code) (`@anthropic-ai/claude-code` on npm).
 
@@ -17,7 +17,10 @@ Generates an interactive dashboard showing release frequency, day-of-week and ho
     alt="Stacked bar chart showing changelog entries per week from March 2025 to March 2026, colored by major version series (0.2.x, 1.0.x, 2.0.x, 2.1.x) with paler segments for fix entries"
     title="Sample snapshot of one of many charts on the live dashboard">
 </a>
+<br>
 <em>Sample snapshot — one of many charts on the <a href="https://alestic.github.io/claude-code-release-cadence/">live dashboard</a></em>
+
+---
 
 > **Disclaimer:** This is an independent project. It is not affiliated with, endorsed by, or sponsored by Anthropic.
 
