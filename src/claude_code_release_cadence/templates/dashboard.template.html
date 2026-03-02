@@ -29,9 +29,9 @@
 <div class="stats-grid" id="stats-grid"></div>
 
 <div class="chart-container">
-  <h2 id="days-between">Days Between Consecutive Releases</h2>
-  <p class="chart-desc">Gap in days from one release to the next. Lower = more frequent. Points colored by major version series.</p>
-  <div class="chart-wrapper"><canvas id="gapChart" role="img" aria-label="Scatter chart: days between consecutive releases over time, colored by major version series"></canvas></div>
+  <h2 id="entries-per-week">Changelog Entries Per Week</h2>
+  <p class="chart-desc">Total changelog bullet points per calendar week (Mon&ndash;Sun), stacked by major version series. Paler segments = fix entries.</p>
+  <div class="chart-wrapper"><canvas id="weekNotesChart" role="img" aria-label="Stacked bar chart: changelog entries per calendar week, by major version series"></canvas></div>
 </div>
 
 <div class="chart-container">
@@ -41,15 +41,15 @@
 </div>
 
 <div class="chart-container">
-  <h2 id="entries-per-week">Changelog Entries Per Week</h2>
-  <p class="chart-desc">Total changelog bullet points per calendar week (Mon&ndash;Sun), stacked by major version series. Paler segments = fix entries.</p>
-  <div class="chart-wrapper"><canvas id="weekNotesChart" role="img" aria-label="Stacked bar chart: changelog entries per calendar week, by major version series"></canvas></div>
-</div>
-
-<div class="chart-container">
   <h2 id="entries-per-release">Changelog Entries Per Release</h2>
   <p class="chart-desc">Fixes vs. non-fix changes per release ({{NOTES_COUNT}} releases with changelog entries). Colored by major version series; paler segments = fixes.</p>
   <div class="chart-wrapper"><canvas id="notesChart" role="img" aria-label="Stacked bar chart: changelog entries per release, split into fixes vs non-fix changes"></canvas></div>
+</div>
+
+<div class="chart-container">
+  <h2 id="days-between">Days Between Consecutive Releases</h2>
+  <p class="chart-desc">Gap in days from one release to the next. Lower = more frequent. Points colored by major version series.</p>
+  <div class="chart-wrapper"><canvas id="gapChart" role="img" aria-label="Scatter chart: days between consecutive releases over time, colored by major version series"></canvas></div>
 </div>
 
 <div class="chart-container">
