@@ -102,8 +102,8 @@ purge: clean ## Remove public, data, venv, and caches
 install-hooks: $(INSTALL_STAMP) ## Install pre-commit git hooks
 	uv run pre-commit install
 
-.PHONY: refresh
-refresh: ## Reset GitHub's 60-day inactivity timer on scheduled workflows, re-enabling any it disabled
+.PHONY: github-actions-refresh
+github-actions-refresh: ## Reset GitHub's 60-day inactivity timer on scheduled workflows, re-enabling any it disabled
 	@gh workflow list --all --json id,name,path,state --jq '.[] | select(.state != "disabled_manually") | "\(.id)\t\(.path)\t\(.name)"' | { \
 		found=; while IFS="$$(printf '\t')" read -r id path name; do \
 			grep -Eq '^[[:space:]]+schedule:' "$$path" || continue; \
