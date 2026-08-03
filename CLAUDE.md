@@ -119,6 +119,6 @@ Generated outputs (gitignored): `public/index.html` (Chart.js dashboard), `data/
 
 `npm-sizes.json` is optional — the build runs without it (sizes will be blank).
 
-CI runs tests on every push/PR (`test.yml`) and deploys `public/` to GitHub Pages hourly, on push to main, and via `workflow_dispatch`. GitHub disables scheduled workflows after 60 days without repo activity; `make refresh` re-enables any it has disabled.
+CI runs tests on every push/PR (`test.yml`) and deploys `public/` to GitHub Pages hourly, on push to main, and via `workflow_dispatch`. GitHub disables scheduled workflows after 60 days without repo activity; `make refresh` resets that timer on all scheduled workflows and re-enables any already disabled.
 
 `GA_MEASUREMENT_ID` env var (optional) — injects GA4 gtag.js snippet into the dashboard. Set as a GitHub Actions secret for deploys; omitted locally.

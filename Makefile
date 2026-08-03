@@ -103,10 +103,13 @@ install-hooks: $(INSTALL_STAMP) ## Install pre-commit git hooks
 	uv run pre-commit install
 
 .PHONY: refresh
-refresh: ## Re-enable scheduled workflows disabled by GitHub for repo inactivity
-	@gh workflow list --all --json id,name,state --jq '.[] | select(.state == "disabled_inactivity") | "\(.id)\t\(.name)"' | { \
-		found=; while IFS="$$(printf '\t')" read -r id name; do found=1; echo "Re-enabling: $$name"; gh workflow enable "$$id"; done; \
-		[ -n "$$found" ] || echo "No workflows disabled for inactivity"; }
+refresh: ## Reset GitHub's 60-day inactivity timer on scheduled workflows, re-enabling any it disabled
+	@gh workflow list --all --json id,name,path,state --jq '.[] | select(.state != "disabled_manually") | "\(.id)\t\(.path)\t\(.name)"' | { \
+		found=; while IFS="$$(printf '\t')" read -r id path name; do \
+			grep -Eq '^[[:space:]]+schedule:' "$$path" || continue; \
+			found=1; echo "Refreshing: $$name"; gh workflow enable "$$id"; \
+		done; \
+		[ -n "$$found" ] || echo "No scheduled workflows found"; }
 
 .PHONY: cloc
 cloc: ## Count lines of code
