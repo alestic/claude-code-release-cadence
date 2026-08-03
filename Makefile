@@ -102,6 +102,12 @@ purge: clean ## Remove public, data, venv, and caches
 install-hooks: $(INSTALL_STAMP) ## Install pre-commit git hooks
 	uv run pre-commit install
 
+.PHONY: refresh
+refresh: ## Re-enable scheduled workflows disabled by GitHub for repo inactivity
+	@gh workflow list --all --json id,name,state --jq '.[] | select(.state == "disabled_inactivity") | "\(.id)\t\(.name)"' | { \
+		found=; while IFS="$$(printf '\t')" read -r id name; do found=1; echo "Re-enabling: $$name"; gh workflow enable "$$id"; done; \
+		[ -n "$$found" ] || echo "No workflows disabled for inactivity"; }
+
 .PHONY: cloc
 cloc: ## Count lines of code
 	cloc --vcs=git --exclude-dir=.venv,legacy,data,public --exclude-lang=CSV,Text,Markdown,JSON .
