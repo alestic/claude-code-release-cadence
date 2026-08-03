@@ -2,7 +2,7 @@
 
 [project]
 name = "claude-code-release-cadence"
-version = "2026.03.02.1117"
+version = "2026.08.02.1800"
 description = "Analyze and visualize Claude Code's release cadence"
 requires-python = ">=3.12"
 dependencies = []
